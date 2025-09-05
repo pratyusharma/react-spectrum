@@ -1,0 +1,677 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {Layout} from '@react-spectrum/docs';
+export default Layout;
+
+import {HeaderInfo, PageDescription} from '@react-spectrum/docs';
+import styles from '@react-spectrum/docs/src/docs.css';
+import {Keyboard} from '@react-spectrum/text';
+
+---
+category: Loading
+keywords: [terminal, loading, accessibility, a11y, screen reader, keyboard, focus]
+type: accessibility
+---
+
+# Terminal Loading Accessibility
+
+<PageDescription>
+Comprehensive accessibility guide for terminal-style loading animations, ensuring inclusive experiences for all users.
+</PageDescription>
+
+## Overview
+
+Terminal loading animations are designed with accessibility as a core principle. This guide covers how the feature supports users with disabilities, including those who use screen readers, keyboard navigation, or have motion sensitivity.
+
+## WCAG 2.1 Compliance
+
+Terminal loading meets WCAG 2.1 Level AA requirements:
+
+- **Perceivable**: Provides text alternatives and respects motion preferences
+- **Operable**: Maintains keyboard accessibility and reasonable timing
+- **Understandable**: Offers clear, predictable behavior
+- **Robust**: Works with assistive technologies
+
+## Screen Reader Support
+
+### ARIA Live Announcements
+
+Terminal loading provides appropriate announcements for screen reader users:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ScreenReaderExample() {
+  let [isPending, setPending] = useState(false);
+
+  let handlePress = () => {
+    setPending(true);
+    // Screen reader announces: "Loading"
+    setTimeout(() => {
+      setPending(false);
+      // Screen reader announces: "Save, button"
+    }, 3000);
+  };
+
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save
+    </Button>
+  );
+}
+```
+
+### Announcement Behavior
+
+The screen reader experience follows this pattern:
+
+1. **Initial state**: "Save, button"
+2. **Loading starts**: "Loading" (announced via `aria-live="polite"`)
+3. **During animation**: Text changes are announced at reasonable intervals
+4. **Loading ends**: "Save, button" (focus returns to normal state)
+
+### Custom Announcements
+
+You can customize what screen readers announce:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function CustomAnnouncementExample() {
+  let [isPending, setPending] = useState(false);
+
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start'}}>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Saving document"
+        aria-label={isPending ? "Saving document in progress" : "Save document"}
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 3000);
+        }}
+      >
+        Save Document
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Processing request"
+        aria-label={isPending ? "Processing your request, please wait" : "Process request"}
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Process Request
+      </Button>
+    </div>
+  );
+}
+```
+
+## Reduced Motion Support
+
+### Automatic Detection
+
+Terminal loading automatically respects the `prefers-reduced-motion` CSS media query:
+
+```css
+/* When user has reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  /* Terminal animation is automatically disabled */
+  /* Static text is shown instead */
+}
+```
+
+### Implementation
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ReducedMotionExample() {
+  let [isPending, setPending] = useState(false);
+
+  return (
+    <div style={{padding: 20, border: '1px solid #ccc', borderRadius: 8}}>
+      <h3>Reduced Motion Demo</h3>
+      <p>
+        If you have "Reduce motion" enabled in your OS settings, 
+        the terminal animation will show static text instead of animating.
+      </p>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Processing"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Test Reduced Motion
+      </Button>
+      <p style={{fontSize: '0.9em', marginTop: 8, color: '#666'}}>
+        To test: Enable "Reduce motion" in your system accessibility settings
+      </p>
+    </div>
+  );
+}
+```
+
+### Manual Override
+
+You can manually control motion behavior:
+
+```tsx
+import {Button} from '@react-spectrum/s2';
+import {useState, useEffect} from 'react';
+
+function ManualMotionControl() {
+  let [isPending, setPending] = useState(false);
+  let [reducedMotion, setReducedMotion] = useState(false);
+
+  // Check user's motion preference
+  useEffect(() => {
+    let mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mediaQuery.matches);
+    
+    let handler = (e) => setReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle={reducedMotion ? "spinner" : "terminal"}
+      terminalText="Processing"
+      onPress={() => {
+        setPending(true);
+        setTimeout(() => setPending(false), 3000);
+      }}
+    >
+      Adaptive Loading
+    </Button>
+  );
+}
+```
+
+## Keyboard Navigation
+
+### Focus Management
+
+Terminal loading maintains proper focus behavior:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function KeyboardExample() {
+  let [isPending, setPending] = useState(false);
+
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start'}}>
+      <p>Use <Keyboard>Tab</Keyboard> to navigate between buttons:</p>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 3000);
+        }}
+      >
+        First Button
+      </Button>
+      
+      <Button variant="secondary">
+        Second Button (always focusable)
+      </Button>
+      
+      <Button variant="primary">
+        Third Button
+      </Button>
+      
+      <p style={{fontSize: '0.9em', color: '#666'}}>
+        The loading button remains focusable but interactions are disabled during loading.
+      </p>
+    </div>
+  );
+}
+```
+
+### Keyboard Interactions
+
+During loading state:
+- Button remains focusable with <Keyboard>Tab</Keyboard>
+- <Keyboard>Space</Keyboard> and <Keyboard>Enter</Keyboard> are disabled
+- Focus indicator remains visible
+- Screen reader announces loading state
+
+## High Contrast Mode
+
+Terminal loading works correctly in high contrast mode:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function HighContrastExample() {
+  let [isPending, setPending] = useState(false);
+
+  return (
+    <div style={{padding: 20, backgroundColor: 'var(--spectrum-global-color-gray-100)', borderRadius: 8}}>
+      <h3>High Contrast Compatibility</h3>
+      <p>Terminal loading adapts to high contrast themes automatically.</p>
+      
+      <div style={{display: 'flex', gap: 12, marginTop: 16}}>
+        <Button 
+          isPending={isPending}
+          loadingStyle="terminal"
+          variant="primary"
+          onPress={() => {
+            setPending(true);
+            setTimeout(() => setPending(false), 3000);
+          }}
+        >
+          Primary Action
+        </Button>
+        
+        <Button 
+          isPending={isPending}
+          loadingStyle="terminal"
+          variant="secondary"
+          onPress={() => {
+            setPending(true);
+            setTimeout(() => setPending(false), 3000);
+          }}
+        >
+          Secondary Action
+        </Button>
+      </div>
+      
+      <p style={{fontSize: '0.9em', marginTop: 12, color: '#666'}}>
+        Text colors automatically adjust for proper contrast ratios.
+      </p>
+    </div>
+  );
+}
+```
+
+## Color and Contrast
+
+### Automatic Adaptation
+
+Terminal loading text automatically adapts to ensure proper contrast:
+
+- Light themes: Dark text on light backgrounds
+- Dark themes: Light text on dark backgrounds  
+- High contrast themes: System colors are respected
+- Custom themes: Inherits from button text color
+
+### Manual Color Control
+
+For specific use cases, you can control color explicitly:
+
+```tsx
+import {Button} from '@react-spectrum/s2';
+
+function ColorControlExample() {
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column', alignItems: 'flex-start'}}>
+      <Button 
+        isPending={true}
+        loadingStyle="terminal"
+        staticColor="white"
+        variant="primary"
+        style={{backgroundColor: '#0066cc'}}
+      >
+        White Text on Blue
+      </Button>
+      
+      <Button 
+        isPending={true}
+        loadingStyle="terminal"
+        staticColor="black"
+        variant="secondary"
+        style={{backgroundColor: '#f0f0f0', color: '#000'}}
+      >
+        Black Text on Light
+      </Button>
+      
+      <Button 
+        isPending={true}
+        loadingStyle="terminal"
+        staticColor="auto"
+        variant="primary"
+      >
+        Automatic Color
+      </Button>
+    </div>
+  );
+}
+```
+
+## Testing with Assistive Technologies
+
+### Screen Reader Testing
+
+**NVDA (Windows):**
+```
+1. Navigate to button with Tab
+2. Press Space to activate
+3. Listen for "Loading" announcement
+4. Wait for completion announcement
+```
+
+**JAWS (Windows):**
+```
+1. Use arrow keys or Tab to find button
+2. Press Enter or Space
+3. Verify loading state is announced
+4. Confirm completion announcement
+```
+
+**VoiceOver (macOS/iOS):**
+```
+1. Use VO+Right Arrow to navigate
+2. Press VO+Space to activate
+3. Listen for loading announcements
+4. Verify state changes are announced
+```
+
+### Keyboard Testing
+
+**Basic Navigation:**
+```
+1. Tab to button - should be focusable
+2. Press Space/Enter - should activate
+3. Tab away and back - focus should be maintained
+4. Wait for completion - button should be re-enabled
+```
+
+**During Loading:**
+```
+1. Tab to loading button - should receive focus
+2. Press Space/Enter - should be ignored
+3. Press Escape - should not cancel (by design)
+4. Use screen reader - should announce loading state
+```
+
+## Best Practices for Accessibility
+
+### Timing Considerations
+
+```tsx
+// Good: Reasonable loading times
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalSpeed={500}  // Not too fast for screen readers
+>
+  Save
+</Button>
+
+// Avoid: Too fast for users to process
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalSpeed={100}  // Too fast
+>
+  Save
+</Button>
+```
+
+### Clear Labeling
+
+```tsx
+// Good: Descriptive labels
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Saving document"
+  aria-label="Save document to cloud storage"
+>
+  Save to Cloud
+</Button>
+
+// Good: Context-aware announcements
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  aria-label={isPending ? "Upload in progress" : "Upload file"}
+>
+  Upload
+</Button>
+```
+
+### Error Handling
+
+```tsx
+import {Button, Toast} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ErrorHandlingExample() {
+  let [isPending, setPending] = useState(false);
+  let [error, setError] = useState(null);
+
+  let handlePress = async () => {
+    setPending(true);
+    setError(null);
+    
+    try {
+      // Simulate API call that might fail
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          Math.random() > 0.5 ? resolve() : reject(new Error('Network error'));
+        }, 2000);
+      });
+    } catch (err) {
+      setError(err.message);
+      // Screen reader will announce the error
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Connecting"
+        onPress={handlePress}
+        aria-describedby={error ? "error-message" : undefined}
+      >
+        Connect to Server
+      </Button>
+      
+      {error && (
+        <div 
+          id="error-message"
+          role="alert"
+          style={{color: 'red', marginTop: 8}}
+        >
+          Error: {error}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Progressive Enhancement
+
+```tsx
+// Graceful degradation for older browsers
+import {Button} from '@react-spectrum/s2';
+import {useState, useEffect} from 'react';
+
+function ProgressiveExample() {
+  let [isPending, setPending] = useState(false);
+  let [supportsAnimation, setSupportsAnimation] = useState(true);
+
+  useEffect(() => {
+    // Check for animation support
+    let supportsRequestAnimationFrame = typeof requestAnimationFrame !== 'undefined';
+    let supportsReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    setSupportsAnimation(supportsRequestAnimationFrame && !supportsReducedMotion);
+  }, []);
+
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle={supportsAnimation ? "terminal" : "spinner"}
+      terminalText="Processing"
+      onPress={() => {
+        setPending(true);
+        setTimeout(() => setPending(false), 3000);
+      }}
+    >
+      Process Data
+    </Button>
+  );
+}
+```
+
+## Accessibility Checklist
+
+### Before Implementation
+
+- [ ] Plan for screen reader announcements
+- [ ] Consider reduced motion preferences
+- [ ] Test keyboard navigation flow
+- [ ] Verify color contrast ratios
+- [ ] Plan error handling strategies
+
+### During Development
+
+- [ ] Implement ARIA live regions
+- [ ] Add proper labeling
+- [ ] Test with keyboard only
+- [ ] Verify focus management
+- [ ] Test in high contrast mode
+
+### Before Release
+
+- [ ] Test with multiple screen readers
+- [ ] Verify reduced motion behavior
+- [ ] Test keyboard navigation thoroughly
+- [ ] Validate ARIA markup
+- [ ] Test with real users with disabilities
+
+### Post-Release Monitoring
+
+- [ ] Gather accessibility feedback
+- [ ] Monitor for accessibility issues
+- [ ] Update based on user feedback
+- [ ] Keep up with WCAG updates
+- [ ] Regular accessibility audits
+
+## Common Accessibility Issues and Solutions
+
+### Issue: Screen Reader Not Announcing Changes
+
+**Problem:**
+```tsx
+// Screen reader doesn't announce loading state
+<Button isPending={isPending}>Save</Button>
+```
+
+**Solution:**
+```tsx
+// Properly configured terminal loading
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Saving"
+>
+  Save
+</Button>
+```
+
+### Issue: Animation Too Fast for Users
+
+**Problem:**
+```tsx
+// Animation changes too quickly
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalSpeed={100}  // Too fast
+>
+  Save
+</Button>
+```
+
+**Solution:**
+```tsx
+// Reasonable animation speed
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalSpeed={500}  // Appropriate speed
+>
+  Save
+</Button>
+```
+
+### Issue: Not Respecting Motion Preferences
+
+**Problem:**
+```tsx
+// Always shows animation regardless of user preference
+<div style={{animation: 'always-animate 1s infinite'}}>
+  Loading...
+</div>
+```
+
+**Solution:**
+```tsx
+// Automatically respects prefers-reduced-motion
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"  // Automatically handles motion preferences
+>
+  Save
+</Button>
+```
+
+## Resources
+
+### Testing Tools
+
+- **Screen Readers**: NVDA, JAWS, VoiceOver, ORCA
+- **Keyboard Testing**: Manual testing with Tab, Enter, Space
+- **Color Contrast**: WebAIM Contrast Checker, Colour Contrast Analyser
+- **Motion Testing**: Browser dev tools, OS accessibility settings
+
+### Standards and Guidelines
+
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/)
+- [MDN Accessibility Documentation](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
+- [WebAIM Resources](https://webaim.org/)
+
+### Related Documentation
+
+- [Terminal Loading API](terminal-loading-api.html) - Complete API reference
+- [Terminal Loading Guide](terminal-loading-guide.html) - Usage examples and patterns
+- [Button Accessibility](Button.html#accessibility) - General button accessibility information

@@ -1,0 +1,303 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {Layout} from '@react-spectrum/docs';
+export default Layout;
+
+import {PropTable, HeaderInfo, TypeLink, PageDescription} from '@react-spectrum/docs';
+import styles from '@react-spectrum/docs/src/docs.css';
+
+---
+category: Loading
+keywords: [terminal, loading, animation, button, pending, progress]
+type: api
+---
+
+# Terminal Loading API
+
+<PageDescription>
+Complete API reference for the terminal-style loading animation feature available across React Spectrum Button components.
+</PageDescription>
+
+## Overview
+
+The terminal loading feature provides a nostalgic, terminal-style loading animation that cycles through text and dots (e.g., "Loading", "Loading.", "Loading..", "Loading...", "Loading...."). This feature is available across all React Spectrum Button components as an alternative to the default spinner animation.
+
+## Button Props
+
+The following props are available on all Button components when using terminal loading:
+
+### loadingStyle
+
+```typescript
+loadingStyle?: 'spinner' | 'terminal'
+```
+
+Controls which loading animation style to use when the button is in a pending state.
+
+- **Default**: `'spinner'`
+- **Values**: 
+  - `'spinner'`: Shows the default indeterminate spinner animation
+  - `'terminal'`: Shows the terminal-style text animation
+
+### terminalText
+
+```typescript
+terminalText?: string
+```
+
+The base text to animate when using terminal loading style. The animation will cycle through this text with increasing numbers of dots appended.
+
+- **Default**: `'Loading'`
+- **Example**: Setting to `'Processing'` will animate: "Processing", "Processing.", "Processing..", etc.
+
+### terminalMaxDots
+
+```typescript
+terminalMaxDots?: number
+```
+
+The maximum number of dots to append to the base text during the animation cycle.
+
+- **Default**: `4`
+- **Range**: `1` to `10` (values outside this range will be clamped)
+- **Example**: With `terminalMaxDots={6}`, the animation will cycle through up to 6 dots
+
+### terminalSpeed
+
+```typescript
+terminalSpeed?: number
+```
+
+The speed of the animation in milliseconds. This controls how long each step of the animation is displayed.
+
+- **Default**: `500`
+- **Range**: `100` to `2000` (values outside this range will be clamped)
+- **Lower values**: Faster animation
+- **Higher values**: Slower animation
+
+## Component-Specific APIs
+
+### React Spectrum S2 Button
+
+```typescript
+import {Button} from '@react-spectrum/s2';
+
+interface ButtonProps {
+  // ... other props
+  isPending?: boolean;
+  loadingStyle?: 'spinner' | 'terminal';
+  terminalText?: string;
+  terminalMaxDots?: number;
+  terminalSpeed?: number;
+}
+```
+
+### React Spectrum v3 Button
+
+```typescript
+import {Button} from '@react-spectrum/button';
+
+interface SpectrumButtonProps {
+  // ... other props
+  isPending?: boolean;
+  loadingStyle?: 'spinner' | 'terminal';
+  terminalText?: string;
+  terminalMaxDots?: number;
+  terminalSpeed?: number;
+}
+```
+
+### React Aria Components Button
+
+```typescript
+import {Button} from 'react-aria-components';
+
+interface ButtonProps {
+  // ... other props
+  isPending?: boolean;
+  loadingStyle?: 'custom' | 'terminal';
+  terminalText?: string;
+  terminalMaxDots?: number;
+  terminalSpeed?: number;
+}
+```
+
+**Note**: React Aria Components uses `'custom'` instead of `'spinner'` as the default loading style, allowing you to provide your own loading indicator.
+
+## TerminalLoader Component
+
+The standalone `TerminalLoader` component can be used independently of buttons:
+
+```typescript
+interface TerminalLoaderProps {
+  /** The base text to animate */
+  text?: string;
+  /** Maximum number of dots to append */
+  maxDots?: number;
+  /** Animation speed in milliseconds */
+  speed?: number;
+  /** Static color for theming */
+  staticColor?: 'white' | 'black' | 'auto';
+  /** Size variant */
+  size?: 'S' | 'M' | 'L' | 'XL';
+  /** Accessibility label */
+  'aria-label'?: string;
+}
+```
+
+### Usage
+
+```tsx
+import {TerminalLoader} from '@react-spectrum/s2';
+
+<TerminalLoader 
+  text="Processing" 
+  maxDots={6} 
+  speed={300}
+  size="M"
+  staticColor="auto"
+  aria-label="Processing request"
+/>
+```
+
+## Animation Behavior
+
+### Animation Cycle
+
+The terminal loading animation follows this pattern:
+
+1. Display base text (e.g., "Loading")
+2. Add dots incrementally: "Loading.", "Loading..", "Loading...", etc.
+3. Continue until `terminalMaxDots` is reached
+4. Reset to base text and repeat
+
+### Timing
+
+- Each step in the animation is displayed for the duration specified by `terminalSpeed`
+- The animation continues until `isPending` becomes `false`
+- Proper cleanup occurs when the component unmounts
+
+### Reduced Motion
+
+The animation automatically respects the user's `prefers-reduced-motion` setting:
+
+- When `prefers-reduced-motion: reduce` is set, the animation is disabled
+- The text remains static at the base text value
+- Accessibility announcements still occur appropriately
+
+## Accessibility Features
+
+### ARIA Live Announcements
+
+Terminal loading provides proper accessibility support:
+
+- Initial loading state is announced to screen readers
+- Text changes during animation are announced via `aria-live="polite"`
+- Loading completion is announced when `isPending` becomes `false`
+
+### Screen Reader Support
+
+- Compatible with all major screen readers (NVDA, JAWS, VoiceOver)
+- Provides meaningful text alternatives for the animation
+- Maintains proper focus management during loading states
+
+### Keyboard Navigation
+
+- Button remains focusable during loading state
+- Keyboard interactions are properly disabled while `isPending` is `true`
+- Focus is maintained and restored appropriately
+
+## Performance Considerations
+
+### Optimization
+
+- Uses `requestAnimationFrame` for smooth animations when supported
+- Proper cleanup of intervals and timeouts prevents memory leaks
+- Debounced prop changes prevent excessive re-renders
+- Components are optimized with `React.memo` where appropriate
+
+### Resource Usage
+
+- Minimal CPU usage due to text-based animation
+- No image or SVG assets required
+- Small bundle size impact (~2KB gzipped)
+
+## Browser Support
+
+Terminal loading is supported in all browsers that React Spectrum supports:
+
+- Chrome 90+
+- Firefox 90+
+- Safari 14+
+- Edge 90+
+
+### Fallbacks
+
+- Graceful fallback to static text on unsupported browsers
+- Animation timing uses `setTimeout` fallback when `requestAnimationFrame` is unavailable
+
+## Theming
+
+### Color Support
+
+Terminal loading respects the current theme colors:
+
+- Text color adapts to light/dark themes automatically
+- `staticColor` prop allows override for specific use cases
+- Maintains proper contrast ratios in all themes
+
+### Typography
+
+- Uses monospace font family for authentic terminal feel
+- Font size scales with button size variants
+- Respects user's font size preferences
+
+## Migration Guide
+
+### From Spinner to Terminal
+
+To migrate from spinner to terminal loading:
+
+```tsx
+// Before
+<Button isPending={isLoading}>Save</Button>
+
+// After
+<Button 
+  isPending={isLoading} 
+  loadingStyle="terminal"
+>
+  Save
+</Button>
+```
+
+### Customization Migration
+
+```tsx
+// Before (custom spinner)
+<Button isPending={isLoading}>
+  {isLoading ? <CustomSpinner /> : 'Save'}
+</Button>
+
+// After (custom terminal)
+<Button 
+  isPending={isLoading}
+  loadingStyle="terminal"
+  terminalText="Saving"
+  terminalMaxDots={6}
+  terminalSpeed={300}
+>
+  Save
+</Button>
+```
+
+## Examples
+
+See the [Terminal Loading Guide](terminal-loading-guide.html) for comprehensive usage examples and best practices.

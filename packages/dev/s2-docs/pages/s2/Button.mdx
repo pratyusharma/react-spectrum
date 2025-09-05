@@ -68,7 +68,14 @@ function Example() {
 
 ## Pending
 
-Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, an indeterminate spinner will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, a loading indicator will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+
+### Loading Styles
+
+Buttons support two loading animation styles:
+
+- **Spinner** (default): An indeterminate spinner animation
+- **Terminal**: A nostalgic terminal-style text animation that cycles through dots
 
 ```tsx render
 "use client";
@@ -76,23 +83,80 @@ import {Button} from '@react-spectrum/s2';
 import {useState} from 'react';
 
 function Example() {
-  let [isLoading, setIsLoading] = useState(false);
+  let [isSpinnerLoading, setIsSpinnerLoading] = useState(false);
+  let [isTerminalLoading, setIsTerminalLoading] = useState(false);
 
-  let handlePress = () => {
-    // Trigger button pending state
-    setIsLoading(true);
+  let handleSpinnerPress = () => {
+    setIsSpinnerLoading(true);
+    setTimeout(() => setIsSpinnerLoading(false), 3000);
+  };
 
-    setTimeout(() => {
-      // Cancel button pending state
-      setIsLoading(false);
-    }, 3000);
+  let handleTerminalPress = () => {
+    setIsTerminalLoading(true);
+    setTimeout(() => setIsTerminalLoading(false), 3000);
   };
 
   return (
-    <Button variant="primary" isPending={isLoading} onPress={handlePress}>Click me!</Button>
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column'}}>
+      <Button variant="primary" isPending={isSpinnerLoading} onPress={handleSpinnerPress}>
+        Spinner Loading
+      </Button>
+      <Button 
+        variant="secondary" 
+        isPending={isTerminalLoading} 
+        loadingStyle="terminal"
+        onPress={handleTerminalPress}
+      >
+        Terminal Loading
+      </Button>
+    </div>
   );
 }
 ```
+
+### Terminal Loading Customization
+
+The terminal loading style can be customized with additional props:
+
+```tsx render
+"use client";
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function CustomTerminalExample() {
+  let [isLoading, setIsLoading] = useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column'}}>
+      <Button 
+        variant="primary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        terminalText="Processing"
+        terminalMaxDots={6}
+        terminalSpeed={300}
+        onPress={handlePress}
+      >
+        Custom Terminal
+      </Button>
+    </div>
+  );
+}
+```
+
+### Accessibility
+
+Both loading styles provide proper accessibility support:
+
+- Screen readers announce loading state changes
+- Respects `prefers-reduced-motion` settings
+- Maintains focus management during loading states
+- Provides appropriate ARIA live announcements
 
 ## Props
 

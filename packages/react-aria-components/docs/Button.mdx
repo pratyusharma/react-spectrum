@@ -169,7 +169,16 @@ A `Button` can be put into a pending state using the `isPending` prop.
 This is useful when an action takes a long time to complete, and you want to provide feedback to the user that the action is in progress.
 The pending state announces the state change to assistive technologies and disables interactions with the exception of focus.
 
-A [ProgressBar](ProgressBar.html) component is required to show the pending state correctly.
+### Loading Styles
+
+Buttons support two loading animation styles that can be configured with the `loadingStyle` prop:
+
+- **Custom** (default): You provide your own loading indicator (typically a [ProgressBar](ProgressBar.html) component)
+- **Terminal**: A built-in terminal-style text animation that cycles through dots
+
+#### Custom Loading Indicator
+
+A [ProgressBar](ProgressBar.html) component is required to show the pending state correctly when using the default loading style.
 Make sure to internationalize the `aria-label` you pass to the [ProgressBar](ProgressBar.html) component.
 
 ```tsx example
@@ -226,6 +235,52 @@ function MyProgressCircle(props: ProgressBarProps) {
 ```
 
 </details>
+
+#### Terminal Loading Style
+
+The terminal loading style provides a built-in nostalgic animation that cycles through text and dots, reminiscent of classic terminal interfaces.
+
+```tsx example
+import {useState} from 'react';
+
+function TerminalPendingButton() {
+  let [isPending, setPending] = useState(false);
+
+  let handlePress = () => {
+    setPending(true);
+    setTimeout(() => {
+      setPending(false);
+    }, 5000);
+  };
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column'}}>
+      <Button
+        isPending={isPending}
+        loadingStyle="terminal"
+        onPress={handlePress}>
+        Save
+      </Button>
+      
+      <Button
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Processing"
+        terminalMaxDots={6}
+        terminalSpeed={300}
+        onPress={handlePress}>
+        Custom Terminal
+      </Button>
+    </div>
+  );
+}
+```
+
+The terminal loading style supports the following customization props:
+
+- `terminalText`: The base text to animate (default: "Loading")
+- `terminalMaxDots`: Maximum number of dots to append (default: 4)
+- `terminalSpeed`: Animation speed in milliseconds (default: 500)
 
 ### Accessibility
 

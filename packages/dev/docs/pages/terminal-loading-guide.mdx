@@ -1,0 +1,728 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {Layout} from '@react-spectrum/docs';
+export default Layout;
+
+import {HeaderInfo, PageDescription} from '@react-spectrum/docs';
+import styles from '@react-spectrum/docs/src/docs.css';
+
+---
+category: Loading
+keywords: [terminal, loading, animation, button, guide, examples, best practices]
+type: guide
+---
+
+# Terminal Loading Guide
+
+<PageDescription>
+A comprehensive guide to using terminal-style loading animations in React Spectrum applications, including examples, best practices, and common patterns.
+</PageDescription>
+
+## Introduction
+
+Terminal loading provides a nostalgic, retro-inspired alternative to traditional spinner animations. This feature brings the aesthetic of classic command-line interfaces to modern web applications, creating a unique and memorable user experience.
+
+## Basic Usage
+
+### Getting Started
+
+The simplest way to use terminal loading is to set the `loadingStyle` prop to `"terminal"`:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function BasicExample() {
+  let [isPending, setPending] = useState(false);
+
+  let handlePress = () => {
+    setPending(true);
+    // Simulate async operation
+    setTimeout(() => setPending(false), 3000);
+  };
+
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save Document
+    </Button>
+  );
+}
+```
+
+This creates a button that, when clicked, displays a terminal-style animation cycling through:
+- "Loading"
+- "Loading."
+- "Loading.."
+- "Loading..."
+- "Loading...."
+
+## Customization Options
+
+### Custom Loading Text
+
+Use the `terminalText` prop to customize the base text:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function CustomTextExample() {
+  let [isPending, setPending] = useState(false);
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column', alignItems: 'flex-start'}}>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Processing"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Process Data
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Uploading"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Upload Files
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Analyzing"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Run Analysis
+      </Button>
+    </div>
+  );
+}
+```
+
+### Animation Speed Control
+
+Adjust the animation speed with the `terminalSpeed` prop (in milliseconds):
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function SpeedExample() {
+  let [isPending, setPending] = useState(false);
+
+  let handlePress = (speed) => () => {
+    setPending(true);
+    setTimeout(() => setPending(false), 5000);
+  };
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column', alignItems: 'flex-start'}}>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalSpeed={200}
+        terminalText="Fast"
+        onPress={handlePress(200)}
+      >
+        Fast Animation
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalSpeed={500}
+        terminalText="Normal"
+        onPress={handlePress(500)}
+      >
+        Normal Speed
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalSpeed={1000}
+        terminalText="Slow"
+        onPress={handlePress(1000)}
+      >
+        Slow Animation
+      </Button>
+    </div>
+  );
+}
+```
+
+### Maximum Dots Configuration
+
+Control how many dots appear in the animation cycle:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function DotsExample() {
+  let [isPending, setPending] = useState(false);
+
+  let handlePress = () => {
+    setPending(true);
+    setTimeout(() => setPending(false), 6000);
+  };
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexDirection: 'column', alignItems: 'flex-start'}}>
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalMaxDots={2}
+        terminalText="Brief"
+        onPress={handlePress}
+      >
+        2 Dots Max
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalMaxDots={6}
+        terminalText="Extended"
+        onPress={handlePress}
+      >
+        6 Dots Max
+      </Button>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalMaxDots={10}
+        terminalText="Long"
+        onPress={handlePress}
+      >
+        10 Dots Max
+      </Button>
+    </div>
+  );
+}
+```
+
+## Common Use Cases
+
+### Form Submissions
+
+Terminal loading works great for form submission buttons:
+
+```tsx example
+import {Button, TextField, Form} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function FormExample() {
+  let [isPending, setPending] = useState(false);
+  let [formData, setFormData] = useState({name: '', email: ''});
+
+  let handleSubmit = (e) => {
+    e.preventDefault();
+    setPending(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setPending(false);
+      alert('Form submitted successfully!');
+    }, 2500);
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} style={{maxWidth: 300}}>
+      <TextField 
+        label="Name" 
+        value={formData.name}
+        onChange={(value) => setFormData({...formData, name: value})}
+      />
+      <TextField 
+        label="Email" 
+        type="email"
+        value={formData.email}
+        onChange={(value) => setFormData({...formData, email: value})}
+      />
+      <Button 
+        type="submit"
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Submitting"
+        variant="primary"
+      >
+        Submit Form
+      </Button>
+    </Form>
+  );
+}
+```
+
+### File Operations
+
+Perfect for file upload, download, or processing operations:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function FileOperationsExample() {
+  let [uploadPending, setUploadPending] = useState(false);
+  let [downloadPending, setDownloadPending] = useState(false);
+  let [processPending, setProcessPending] = useState(false);
+
+  return (
+    <div style={{display: 'flex', gap: 12, flexWrap: 'wrap'}}>
+      <Button 
+        isPending={uploadPending}
+        loadingStyle="terminal"
+        terminalText="Uploading"
+        terminalSpeed={400}
+        onPress={() => {
+          setUploadPending(true);
+          setTimeout(() => setUploadPending(false), 4000);
+        }}
+      >
+        Upload Files
+      </Button>
+      
+      <Button 
+        isPending={downloadPending}
+        loadingStyle="terminal"
+        terminalText="Downloading"
+        terminalSpeed={300}
+        onPress={() => {
+          setDownloadPending(true);
+          setTimeout(() => setDownloadPending(false), 3500);
+        }}
+      >
+        Download Report
+      </Button>
+      
+      <Button 
+        isPending={processPending}
+        loadingStyle="terminal"
+        terminalText="Processing"
+        terminalMaxDots={6}
+        onPress={() => {
+          setProcessPending(true);
+          setTimeout(() => setProcessPending(false), 5000);
+        }}
+      >
+        Process Images
+      </Button>
+    </div>
+  );
+}
+```
+
+### API Operations
+
+Great for various API-related operations:
+
+```tsx example
+import {Button} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function APIExample() {
+  let [fetchPending, setFetchPending] = useState(false);
+  let [savePending, setSavePending] = useState(false);
+  let [syncPending, setSyncPending] = useState(false);
+
+  return (
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12}}>
+      <Button 
+        isPending={fetchPending}
+        loadingStyle="terminal"
+        terminalText="Fetching"
+        onPress={() => {
+          setFetchPending(true);
+          setTimeout(() => setFetchPending(false), 2000);
+        }}
+      >
+        Fetch Data
+      </Button>
+      
+      <Button 
+        isPending={savePending}
+        loadingStyle="terminal"
+        terminalText="Saving"
+        variant="primary"
+        onPress={() => {
+          setSavePending(true);
+          setTimeout(() => setSavePending(false), 1500);
+        }}
+      >
+        Save Changes
+      </Button>
+      
+      <Button 
+        isPending={syncPending}
+        loadingStyle="terminal"
+        terminalText="Syncing"
+        terminalMaxDots={5}
+        terminalSpeed={600}
+        onPress={() => {
+          setSyncPending(true);
+          setTimeout(() => setSyncPending(false), 4000);
+        }}
+      >
+        Sync Data
+      </Button>
+    </div>
+  );
+}
+```
+
+## Advanced Patterns
+
+### Conditional Loading Styles
+
+You can dynamically switch between loading styles based on user preferences or context:
+
+```tsx example
+import {Button, Switch} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ConditionalExample() {
+  let [isPending, setPending] = useState(false);
+  let [useTerminal, setUseTerminal] = useState(true);
+
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start'}}>
+      <Switch 
+        isSelected={useTerminal}
+        onChange={setUseTerminal}
+      >
+        Use Terminal Loading
+      </Switch>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle={useTerminal ? 'terminal' : 'spinner'}
+        terminalText="Processing"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 3000);
+        }}
+      >
+        Process Request
+      </Button>
+    </div>
+  );
+}
+```
+
+### Context-Aware Text
+
+Customize the loading text based on the operation context:
+
+```tsx example
+import {Button, Picker, Item} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ContextAwareExample() {
+  let [isPending, setPending] = useState(false);
+  let [operation, setOperation] = useState('save');
+
+  let operationConfig = {
+    save: { text: 'Saving', maxDots: 3, speed: 400 },
+    export: { text: 'Exporting', maxDots: 5, speed: 300 },
+    backup: { text: 'Backing up', maxDots: 4, speed: 600 },
+    analyze: { text: 'Analyzing', maxDots: 6, speed: 250 }
+  };
+
+  let config = operationConfig[operation];
+
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start'}}>
+      <Picker 
+        label="Operation Type"
+        selectedKey={operation}
+        onSelectionChange={setOperation}
+      >
+        <Item key="save">Save Document</Item>
+        <Item key="export">Export Data</Item>
+        <Item key="backup">Create Backup</Item>
+        <Item key="analyze">Run Analysis</Item>
+      </Picker>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText={config.text}
+        terminalMaxDots={config.maxDots}
+        terminalSpeed={config.speed}
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 4000);
+        }}
+      >
+        Execute {operation.charAt(0).toUpperCase() + operation.slice(1)}
+      </Button>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### When to Use Terminal Loading
+
+**Good use cases:**
+- Developer tools and technical applications
+- Retro or gaming-themed interfaces
+- Long-running operations where the nostalgic feel adds character
+- Applications targeting technical audiences
+- When you want to add personality to standard operations
+
+**Consider alternatives for:**
+- High-frequency operations (use spinner for less visual noise)
+- Professional business applications where consistency is key
+- Mobile interfaces where text animation might be harder to read
+- Accessibility-first applications (though terminal loading is accessible)
+
+### Text Selection Guidelines
+
+**Effective loading text:**
+- Keep it concise (1-2 words ideal)
+- Use present participle verbs ("Loading", "Processing", "Saving")
+- Match the action being performed
+- Consider internationalization needs
+
+**Examples:**
+```tsx
+// Good
+terminalText="Saving"      // Clear, concise
+terminalText="Loading"     // Standard, familiar
+terminalText="Processing"  // Descriptive
+
+// Avoid
+terminalText="Please wait while we save your document"  // Too long
+terminalText="Save"        // Not progressive tense
+terminalText="..."         // Not descriptive
+```
+
+### Animation Timing
+
+**Speed recommendations:**
+- **Fast (200-300ms)**: Quick operations, high-frequency actions
+- **Normal (400-600ms)**: Standard operations, balanced feel
+- **Slow (700-1000ms)**: Long operations, dramatic effect
+
+**Dot count guidelines:**
+- **2-3 dots**: Quick operations, minimal visual noise
+- **4-5 dots**: Standard operations, good balance
+- **6+ dots**: Long operations, extended animation cycles
+
+### Performance Considerations
+
+**Memory management:**
+```tsx
+// Good: Cleanup happens automatically
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  onPress={handlePress}
+>
+  Save
+</Button>
+
+// Good: Conditional rendering for complex cases
+{showButton && (
+  <Button 
+    isPending={isPending}
+    loadingStyle="terminal"
+  >
+    Save
+  </Button>
+)}
+```
+
+**Avoid excessive re-renders:**
+```tsx
+// Good: Memoize expensive computations
+const terminalConfig = useMemo(() => ({
+  text: getLoadingText(operation),
+  maxDots: getMaxDots(operation),
+  speed: getSpeed(operation)
+}), [operation]);
+
+// Good: Stable references
+const handlePress = useCallback(() => {
+  // handle press logic
+}, [dependencies]);
+```
+
+## Accessibility Considerations
+
+### Screen Reader Support
+
+Terminal loading automatically provides appropriate ARIA announcements:
+
+```tsx
+// This button will announce:
+// - "Save, button" initially
+// - "Loading" when isPending becomes true
+// - "Save, button" when isPending becomes false
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+>
+  Save
+</Button>
+```
+
+### Reduced Motion
+
+The animation respects `prefers-reduced-motion`:
+
+```css
+/* Users with reduced motion preferences see static text */
+@media (prefers-reduced-motion: reduce) {
+  /* Terminal animation is automatically disabled */
+}
+```
+
+### Focus Management
+
+```tsx
+// Focus is maintained during loading state
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  onPress={handlePress}
+  // Button remains focusable but interactions are disabled
+>
+  Save
+</Button>
+```
+
+## Internationalization
+
+### Text Localization
+
+Always localize terminal text for international applications:
+
+```tsx
+import {useLocale} from '@react-spectrum/i18n';
+
+function LocalizedExample() {
+  let {locale} = useLocale();
+  
+  let loadingText = {
+    'en-US': 'Loading',
+    'es-ES': 'Cargando',
+    'fr-FR': 'Chargement',
+    'de-DE': 'Laden',
+    'ja-JP': '読み込み中'
+  }[locale] || 'Loading';
+
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle="terminal"
+      terminalText={loadingText}
+    >
+      Save
+    </Button>
+  );
+}
+```
+
+### RTL Support
+
+Terminal loading works correctly in RTL layouts:
+
+```tsx
+// Automatically adapts to RTL languages
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="حفظ"  // Arabic text
+>
+  Save
+</Button>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Animation not appearing:**
+```tsx
+// Ensure isPending is true and loadingStyle is set
+<Button 
+  isPending={true}  // Must be true
+  loadingStyle="terminal"  // Must be specified
+>
+  Save
+</Button>
+```
+
+**Text not updating:**
+```tsx
+// Check that terminalText prop is being passed correctly
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Custom Text"  // Should update animation
+>
+  Save
+</Button>
+```
+
+**Animation too fast/slow:**
+```tsx
+// Adjust terminalSpeed (in milliseconds)
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalSpeed={500}  // Try different values
+>
+  Save
+</Button>
+```
+
+### Browser Compatibility
+
+Terminal loading works in all supported browsers. For older browsers:
+
+```tsx
+// Graceful fallback to static text
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Loading"
+  // Older browsers show "Loading" without animation
+>
+  Save
+</Button>
+```
+
+## Related Documentation
+
+- [Terminal Loading API](terminal-loading-api.html) - Complete API reference
+- [Button Component](Button.html) - Main Button component documentation  
+- [Accessibility Guide](terminal-loading-accessibility.html) - Detailed accessibility information
+- [Migration Guide](terminal-loading-migration.html) - Migrating from spinner to terminal loading

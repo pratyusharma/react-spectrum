@@ -1,0 +1,803 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {Layout} from '@react-spectrum/docs';
+export default Layout;
+
+import {HeaderInfo, PageDescription} from '@react-spectrum/docs';
+import styles from '@react-spectrum/docs/src/docs.css';
+
+---
+category: Loading
+keywords: [terminal, loading, migration, spinner, upgrade, transition]
+type: migration
+---
+
+# Terminal Loading Migration Guide
+
+<PageDescription>
+Step-by-step guide for migrating from spinner-based loading to terminal-style loading animations in React Spectrum applications.
+</PageDescription>
+
+## Overview
+
+This guide helps you transition from traditional spinner loading animations to the new terminal-style loading feature. The migration is designed to be seamless and backward-compatible, allowing you to adopt terminal loading gradually or all at once.
+
+## Backward Compatibility
+
+**Important**: Terminal loading is completely backward compatible. Existing buttons with `isPending={true}` will continue to work exactly as before, showing spinner animations by default.
+
+```tsx
+// This continues to work unchanged
+<Button isPending={isLoading}>Save</Button>
+// Still shows spinner animation
+```
+
+## Basic Migration
+
+### Step 1: Simple Conversion
+
+The most basic migration involves adding the `loadingStyle` prop:
+
+```tsx
+// Before: Default spinner loading
+<Button isPending={isLoading} onPress={handleSave}>
+  Save Document
+</Button>
+
+// After: Terminal loading
+<Button 
+  isPending={isLoading} 
+  loadingStyle="terminal"
+  onPress={handleSave}
+>
+  Save Document
+</Button>
+```
+
+### Step 2: Custom Loading Text
+
+Enhance the user experience with descriptive loading text:
+
+```tsx
+// Before: Generic "Loading" text
+<Button isPending={isLoading} loadingStyle="terminal">
+  Save Document
+</Button>
+
+// After: Descriptive loading text
+<Button 
+  isPending={isLoading} 
+  loadingStyle="terminal"
+  terminalText="Saving"
+>
+  Save Document
+</Button>
+```
+
+## Component-Specific Migrations
+
+### React Spectrum S2 Buttons
+
+```tsx
+// Before
+import {Button} from '@react-spectrum/s2';
+
+function SaveButton() {
+  let [isPending, setPending] = useState(false);
+  
+  return (
+    <Button 
+      isPending={isPending}
+      variant="primary"
+      onPress={() => {
+        setPending(true);
+        saveDocument().finally(() => setPending(false));
+      }}
+    >
+      Save
+    </Button>
+  );
+}
+
+// After
+import {Button} from '@react-spectrum/s2';
+
+function SaveButton() {
+  let [isPending, setPending] = useState(false);
+  
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle="terminal"
+      terminalText="Saving"
+      terminalSpeed={400}
+      variant="primary"
+      onPress={() => {
+        setPending(true);
+        saveDocument().finally(() => setPending(false));
+      }}
+    >
+      Save
+    </Button>
+  );
+}
+```
+
+### React Spectrum v3 Buttons
+
+```tsx
+// Before
+import {Button} from '@react-spectrum/button';
+
+<Button 
+  isPending={isSubmitting}
+  variant="cta"
+  onPress={handleSubmit}
+>
+  Submit Form
+</Button>
+
+// After
+import {Button} from '@react-spectrum/button';
+
+<Button 
+  isPending={isSubmitting}
+  loadingStyle="terminal"
+  terminalText="Submitting"
+  terminalMaxDots={3}
+  variant="cta"
+  onPress={handleSubmit}
+>
+  Submit Form
+</Button>
+```
+
+### React Aria Components
+
+```tsx
+// Before
+import {Button} from 'react-aria-components';
+
+<Button isPending={isPending}>
+  {({isPending}) => (
+    <>
+      {isPending && <Spinner aria-label="Loading..." />}
+      {!isPending && "Save"}
+    </>
+  )}
+</Button>
+
+// After
+import {Button} from 'react-aria-components';
+
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Saving"
+>
+  Save
+</Button>
+```
+
+## Advanced Migration Patterns
+
+### Conditional Loading Styles
+
+Migrate gradually by allowing users to choose their preferred loading style:
+
+```tsx
+import {Button, Switch} from '@react-spectrum/s2';
+import {useState} from 'react';
+
+function ConfigurableLoadingButton() {
+  let [isPending, setPending] = useState(false);
+  let [useTerminal, setUseTerminal] = useState(false);
+  
+  return (
+    <div>
+      <Switch 
+        isSelected={useTerminal}
+        onChange={setUseTerminal}
+      >
+        Use terminal loading
+      </Switch>
+      
+      <Button 
+        isPending={isPending}
+        loadingStyle={useTerminal ? 'terminal' : 'spinner'}
+        terminalText="Processing"
+        onPress={() => {
+          setPending(true);
+          setTimeout(() => setPending(false), 3000);
+        }}
+      >
+        Process Data
+      </Button>
+    </div>
+  );
+}
+```
+
+### Context-Based Migration
+
+Use React Context to control loading styles across your application:
+
+```tsx
+// Create a loading style context
+import {createContext, useContext} from 'react';
+
+const LoadingStyleContext = createContext('spinner');
+
+export function LoadingStyleProvider({children, style = 'spinner'}) {
+  return (
+    <LoadingStyleContext.Provider value={style}>
+      {children}
+    </LoadingStyleContext.Provider>
+  );
+}
+
+export function useLoadingStyle() {
+  return useContext(LoadingStyleContext);
+}
+
+// Use in components
+function MyButton({children, ...props}) {
+  let loadingStyle = useLoadingStyle();
+  
+  return (
+    <Button 
+      {...props}
+      loadingStyle={loadingStyle}
+      terminalText={loadingStyle === 'terminal' ? 'Processing' : undefined}
+    >
+      {children}
+    </Button>
+  );
+}
+
+// App-level configuration
+function App() {
+  let [useTerminalLoading, setUseTerminalLoading] = useState(false);
+  
+  return (
+    <LoadingStyleProvider style={useTerminalLoading ? 'terminal' : 'spinner'}>
+      <MyButton isPending={isPending}>Save</MyButton>
+      <MyButton isPending={isPending}>Delete</MyButton>
+    </LoadingStyleProvider>
+  );
+}
+```
+
+### Theme-Based Migration
+
+Integrate terminal loading with your theme system:
+
+```tsx
+// Theme configuration
+const theme = {
+  loading: {
+    style: 'terminal',
+    terminal: {
+      text: 'Loading',
+      maxDots: 4,
+      speed: 500
+    }
+  }
+};
+
+// Themed button component
+function ThemedButton({children, isPending, ...props}) {
+  return (
+    <Button 
+      {...props}
+      isPending={isPending}
+      loadingStyle={theme.loading.style}
+      terminalText={theme.loading.terminal.text}
+      terminalMaxDots={theme.loading.terminal.maxDots}
+      terminalSpeed={theme.loading.terminal.speed}
+    >
+      {children}
+    </Button>
+  );
+}
+```
+
+## Migration Strategies
+
+### Strategy 1: Gradual Migration
+
+Migrate components one at a time, starting with less critical buttons:
+
+```tsx
+// Phase 1: Start with secondary actions
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  variant="secondary"
+>
+  Refresh Data
+</Button>
+
+// Phase 2: Move to primary actions
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Saving"
+  variant="primary"
+>
+  Save Changes
+</Button>
+
+// Phase 3: Update all buttons
+// Continue updating remaining buttons...
+```
+
+### Strategy 2: Feature Flag Migration
+
+Use feature flags to control the rollout:
+
+```tsx
+import {useFeatureFlag} from './featureFlags';
+
+function SmartButton({children, isPending, ...props}) {
+  let terminalLoadingEnabled = useFeatureFlag('terminal-loading');
+  
+  return (
+    <Button 
+      {...props}
+      isPending={isPending}
+      loadingStyle={terminalLoadingEnabled ? 'terminal' : 'spinner'}
+      terminalText={terminalLoadingEnabled ? 'Processing' : undefined}
+    >
+      {children}
+    </Button>
+  );
+}
+```
+
+### Strategy 3: A/B Testing Migration
+
+Test terminal loading with a subset of users:
+
+```tsx
+import {useABTest} from './abTesting';
+
+function TestableButton({children, isPending, ...props}) {
+  let variant = useABTest('loading-animation-test');
+  
+  let loadingConfig = {
+    control: { style: 'spinner' },
+    terminal: { 
+      style: 'terminal',
+      text: 'Loading',
+      maxDots: 4,
+      speed: 500
+    }
+  }[variant];
+  
+  return (
+    <Button 
+      {...props}
+      isPending={isPending}
+      loadingStyle={loadingConfig.style}
+      terminalText={loadingConfig.text}
+      terminalMaxDots={loadingConfig.maxDots}
+      terminalSpeed={loadingConfig.speed}
+    >
+      {children}
+    </Button>
+  );
+}
+```
+
+## Customization During Migration
+
+### Mapping Actions to Loading Text
+
+Create a mapping system for consistent loading text:
+
+```tsx
+const loadingTextMap = {
+  save: 'Saving',
+  delete: 'Deleting',
+  upload: 'Uploading',
+  download: 'Downloading',
+  process: 'Processing',
+  analyze: 'Analyzing',
+  export: 'Exporting',
+  import: 'Importing'
+};
+
+function ActionButton({action, children, isPending, ...props}) {
+  return (
+    <Button 
+      {...props}
+      isPending={isPending}
+      loadingStyle="terminal"
+      terminalText={loadingTextMap[action] || 'Loading'}
+    >
+      {children}
+    </Button>
+  );
+}
+
+// Usage
+<ActionButton action="save" isPending={isSaving}>Save Document</ActionButton>
+<ActionButton action="upload" isPending={isUploading}>Upload File</ActionButton>
+```
+
+### Animation Speed Based on Operation
+
+Adjust animation speed based on expected operation duration:
+
+```tsx
+const operationConfig = {
+  quick: { speed: 300, maxDots: 3 },    // < 2 seconds
+  normal: { speed: 500, maxDots: 4 },   // 2-5 seconds  
+  slow: { speed: 700, maxDots: 6 }      // > 5 seconds
+};
+
+function OperationButton({duration, children, isPending, terminalText, ...props}) {
+  let config = operationConfig[duration] || operationConfig.normal;
+  
+  return (
+    <Button 
+      {...props}
+      isPending={isPending}
+      loadingStyle="terminal"
+      terminalText={terminalText}
+      terminalSpeed={config.speed}
+      terminalMaxDots={config.maxDots}
+    >
+      {children}
+    </Button>
+  );
+}
+
+// Usage
+<OperationButton duration="quick" terminalText="Saving" isPending={isSaving}>
+  Save
+</OperationButton>
+<OperationButton duration="slow" terminalText="Analyzing" isPending={isAnalyzing}>
+  Run Analysis
+</OperationButton>
+```
+
+## Testing Your Migration
+
+### Unit Tests
+
+Update your tests to account for terminal loading:
+
+```tsx
+// Before
+test('shows loading spinner when pending', () => {
+  render(<Button isPending={true}>Save</Button>);
+  expect(screen.getByRole('progressbar')).toBeInTheDocument();
+});
+
+// After
+test('shows terminal loading when pending', () => {
+  render(
+    <Button isPending={true} loadingStyle="terminal">
+      Save
+    </Button>
+  );
+  expect(screen.getByText(/Loading/)).toBeInTheDocument();
+});
+
+test('shows custom terminal text when pending', () => {
+  render(
+    <Button 
+      isPending={true} 
+      loadingStyle="terminal"
+      terminalText="Saving"
+    >
+      Save
+    </Button>
+  );
+  expect(screen.getByText(/Saving/)).toBeInTheDocument();
+});
+```
+
+### Integration Tests
+
+Test the full loading cycle:
+
+```tsx
+test('terminal loading animation cycle', async () => {
+  let setPending;
+  function TestComponent() {
+    let [isPending, _setPending] = useState(false);
+    setPending = _setPending;
+    
+    return (
+      <Button 
+        isPending={isPending}
+        loadingStyle="terminal"
+        terminalText="Testing"
+        terminalSpeed={100} // Fast for testing
+      >
+        Test
+      </Button>
+    );
+  }
+  
+  render(<TestComponent />);
+  
+  // Start loading
+  act(() => setPending(true));
+  
+  // Check initial state
+  expect(screen.getByText('Testing')).toBeInTheDocument();
+  
+  // Wait for animation progression
+  await waitFor(() => {
+    expect(screen.getByText('Testing.')).toBeInTheDocument();
+  });
+  
+  await waitFor(() => {
+    expect(screen.getByText('Testing..')).toBeInTheDocument();
+  });
+  
+  // Stop loading
+  act(() => setPending(false));
+  
+  // Should return to normal state
+  expect(screen.getByText('Test')).toBeInTheDocument();
+});
+```
+
+### Accessibility Testing
+
+Ensure your migration maintains accessibility:
+
+```tsx
+test('announces loading state to screen readers', async () => {
+  render(
+    <Button 
+      isPending={true}
+      loadingStyle="terminal"
+      terminalText="Saving"
+    >
+      Save
+    </Button>
+  );
+  
+  // Check for live region announcement
+  await waitFor(() => {
+    expect(screen.getByRole('status')).toHaveTextContent('Saving');
+  });
+});
+
+test('respects reduced motion preference', () => {
+  // Mock reduced motion preference
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+  
+  render(
+    <Button 
+      isPending={true}
+      loadingStyle="terminal"
+    >
+      Save
+    </Button>
+  );
+  
+  // Should show static text instead of animation
+  expect(screen.getByText('Loading')).toBeInTheDocument();
+});
+```
+
+## Troubleshooting Migration Issues
+
+### Common Issues and Solutions
+
+**Issue: Terminal loading not appearing**
+```tsx
+// Problem: Missing loadingStyle prop
+<Button isPending={true}>Save</Button>
+
+// Solution: Add loadingStyle prop
+<Button isPending={true} loadingStyle="terminal">Save</Button>
+```
+
+**Issue: Animation too fast/slow after migration**
+```tsx
+// Problem: Default speed doesn't match your needs
+<Button isPending={true} loadingStyle="terminal">Save</Button>
+
+// Solution: Adjust terminalSpeed
+<Button 
+  isPending={true} 
+  loadingStyle="terminal"
+  terminalSpeed={300} // Adjust as needed
+>
+  Save
+</Button>
+```
+
+**Issue: Loading text doesn't match button action**
+```tsx
+// Problem: Generic "Loading" text
+<Button isPending={true} loadingStyle="terminal">Delete Item</Button>
+
+// Solution: Use descriptive terminal text
+<Button 
+  isPending={true} 
+  loadingStyle="terminal"
+  terminalText="Deleting"
+>
+  Delete Item
+</Button>
+```
+
+**Issue: Tests failing after migration**
+```tsx
+// Problem: Tests expect spinner elements
+test('shows loading state', () => {
+  render(<Button isPending={true} loadingStyle="terminal">Save</Button>);
+  expect(screen.getByRole('progressbar')).toBeInTheDocument(); // Fails
+});
+
+// Solution: Update test expectations
+test('shows loading state', () => {
+  render(<Button isPending={true} loadingStyle="terminal">Save</Button>);
+  expect(screen.getByText(/Loading/)).toBeInTheDocument(); // Passes
+});
+```
+
+## Performance Considerations
+
+### Bundle Size Impact
+
+Terminal loading adds minimal bundle size:
+- Core functionality: ~1.5KB gzipped
+- Animation logic: ~0.5KB gzipped
+- Total impact: ~2KB gzipped
+
+### Runtime Performance
+
+Terminal loading is optimized for performance:
+- Uses `requestAnimationFrame` when available
+- Proper cleanup prevents memory leaks
+- Text-based animation is CPU-efficient
+
+### Memory Usage
+
+Monitor memory usage during migration:
+
+```tsx
+// Good: Proper cleanup
+function MyButton() {
+  let [isPending, setPending] = useState(false);
+  
+  return (
+    <Button 
+      isPending={isPending}
+      loadingStyle="terminal"
+      onPress={() => {
+        setPending(true);
+        performOperation().finally(() => setPending(false));
+      }}
+    >
+      Save
+    </Button>
+  );
+}
+
+// Avoid: Memory leaks from improper cleanup
+function ProblematicButton() {
+  let [isPending, setPending] = useState(false);
+  
+  useEffect(() => {
+    if (isPending) {
+      // This creates a memory leak if component unmounts
+      let interval = setInterval(() => {
+        // Animation logic without cleanup
+      }, 500);
+      // Missing cleanup!
+    }
+  }, [isPending]);
+  
+  return <Button isPending={isPending}>Save</Button>;
+}
+```
+
+## Migration Checklist
+
+### Pre-Migration
+
+- [ ] Audit existing buttons with loading states
+- [ ] Plan migration strategy (gradual, feature flag, or A/B test)
+- [ ] Update test suites to handle terminal loading
+- [ ] Consider user feedback mechanisms
+- [ ] Plan rollback strategy if needed
+
+### During Migration
+
+- [ ] Update components one at a time
+- [ ] Test accessibility with each change
+- [ ] Monitor performance impact
+- [ ] Gather user feedback
+- [ ] Update documentation
+
+### Post-Migration
+
+- [ ] Remove old loading-related code
+- [ ] Update style guides and design systems
+- [ ] Train team members on new API
+- [ ] Monitor for issues or regressions
+- [ ] Plan for future enhancements
+
+## Rollback Plan
+
+If you need to rollback terminal loading:
+
+```tsx
+// Quick rollback: Remove loadingStyle prop
+// Before rollback
+<Button 
+  isPending={isPending}
+  loadingStyle="terminal"
+  terminalText="Saving"
+>
+  Save
+</Button>
+
+// After rollback
+<Button isPending={isPending}>
+  Save
+</Button>
+// Automatically returns to spinner loading
+```
+
+For systematic rollback:
+
+```tsx
+// Use environment variable or feature flag
+const ENABLE_TERMINAL_LOADING = process.env.REACT_APP_TERMINAL_LOADING === 'true';
+
+<Button 
+  isPending={isPending}
+  loadingStyle={ENABLE_TERMINAL_LOADING ? 'terminal' : 'spinner'}
+  terminalText={ENABLE_TERMINAL_LOADING ? 'Saving' : undefined}
+>
+  Save
+</Button>
+```
+
+## Next Steps
+
+After completing your migration:
+
+1. **Gather Feedback**: Collect user feedback on the new loading experience
+2. **Monitor Metrics**: Track user engagement and satisfaction
+3. **Optimize**: Fine-tune animation speeds and text based on usage patterns
+4. **Expand**: Consider using terminal loading in other components
+5. **Share**: Document your experience and best practices for your team
+
+## Related Documentation
+
+- [Terminal Loading API](terminal-loading-api.html) - Complete API reference
+- [Terminal Loading Guide](terminal-loading-guide.html) - Usage examples and best practices
+- [Terminal Loading Accessibility](terminal-loading-accessibility.html) - Accessibility guidelines
+- [Button Documentation](Button.html) - General button component information
