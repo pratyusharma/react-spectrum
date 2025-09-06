@@ -105,7 +105,7 @@ export interface AriaToggleButtonGroupItemProps<E extends ElementType = 'button'
 
 /** @deprecated */
 type LegacyButtonVariant = 'cta' | 'overBackground';
-export interface SpectrumButtonProps<T extends ElementType = 'button'> extends AriaBaseButtonProps, Omit<ButtonProps, 'onClick'>, LinkButtonProps<T>, StyleProps {
+export interface SpectrumButtonProps<T extends ElementType = 'button'> extends AriaBaseButtonProps, Omit<ButtonProps, 'onClick'>, LinkButtonProps<T>, StyleProps, FocusableProps {
   /** The [visual style](https://spectrum.adobe.com/page/button/#Options) of the button. */
   variant: 'accent' | 'primary' | 'secondary' | 'negative' | LegacyButtonVariant,
   /** The background style of the button. */
