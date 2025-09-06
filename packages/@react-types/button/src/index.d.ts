@@ -117,6 +117,26 @@ export interface SpectrumButtonProps<T extends ElementType = 'button'> extends A
    */
   isPending?: boolean,
   /**
+   * The style of loading animation to display when isPending is true.
+   * @default 'spinner'
+   */
+  loadingStyle?: 'spinner' | 'terminal',
+  /**
+   * The base text to display for terminal-style loading animation.
+   * @default 'Loading'
+   */
+  loadingText?: string,
+  /**
+   * Animation speed in milliseconds per frame for terminal-style loading.
+   * @default 500
+   */
+  loadingSpeed?: number,
+  /**
+   * Maximum number of dots to cycle through for terminal-style loading.
+   * @default 4
+   */
+  loadingDots?: number,
+  /**
    * Whether the button should be displayed with a quiet style.
    * @deprecated
    */

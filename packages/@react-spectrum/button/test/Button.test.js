@@ -42,6 +42,10 @@ describe('Button', function () {
     onPressSpy.mockClear();
   });
 
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   it.each`
     Name              | Component      | props
     ${'ActionButton'} | ${ActionButton}| ${{onPress: onPressSpy}}
@@ -361,6 +365,163 @@ describe('Button', function () {
     );
     let button = getByRole('button');
     expect(button).not.toHaveAttribute('href');
+  });
+
+  // Terminal loading tests
+  describe('Terminal Loading', function () {
+    it('shows terminal loading animation when loadingStyle is terminal', () => {
+      let {getByRole, getByText} = render(
+        <Button isPending loadingStyle="terminal">
+          Save
+        </Button>
+      );
+      let button = getByRole('button');
+      
+      // Initially shows original text
+      expect(getByText('Save')).toBeInTheDocument();
+      
+      // After 1 second delay, shows terminal loading
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      expect(getByText('Loading')).toBeInTheDocument();
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('shows custom loading text for terminal loading', () => {
+      let {getByText} = render(
+        <Button isPending loadingStyle="terminal" loadingText="Saving">
+          Save
+        </Button>
+      );
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      expect(getByText('Saving')).toBeInTheDocument();
+    });
+
+    it('cycles through dots in terminal loading', () => {
+      let {getByText} = render(
+        <Button isPending loadingStyle="terminal" loadingText="Processing">
+          Process
+        </Button>
+      );
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      // Initial state: "Processing"
+      expect(getByText('Processing')).toBeInTheDocument();
+      
+      // After 500ms: "Processing."
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(getByText('Processing.')).toBeInTheDocument();
+      
+      // After 1000ms: "Processing.."
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(getByText('Processing..')).toBeInTheDocument();
+    });
+
+    it('uses custom animation speed for terminal loading', () => {
+      let {getByText} = render(
+        <Button isPending loadingStyle="terminal" loadingText="Loading" loadingSpeed={200}>
+          Click
+        </Button>
+      );
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      // Initial state: "Loading"
+      expect(getByText('Loading')).toBeInTheDocument();
+      
+      // After 200ms: "Loading."
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+      expect(getByText('Loading.')).toBeInTheDocument();
+    });
+
+    it('uses custom max dots for terminal loading', () => {
+      let {getByText} = render(
+        <Button isPending loadingStyle="terminal" loadingText="Loading" loadingDots={2}>
+          Click
+        </Button>
+      );
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      // Initial state: "Loading"
+      expect(getByText('Loading')).toBeInTheDocument();
+      
+      // After 500ms: "Loading."
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(getByText('Loading.')).toBeInTheDocument();
+      
+      // After 1000ms: "Loading.."
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(getByText('Loading..')).toBeInTheDocument();
+      
+      // After 1500ms: back to "Loading"
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(getByText('Loading')).toBeInTheDocument();
+    });
+
+    it('shows spinner when loadingStyle is spinner (default)', () => {
+      let {getByRole, queryByRole} = render(
+        <Button isPending loadingStyle="spinner">
+          Save
+        </Button>
+      );
+      let button = getByRole('button');
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      let spinner = queryByRole('progressbar', {hidden: true});
+      expect(spinner).toBeVisible();
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('maintains accessibility features for terminal loading', () => {
+      let {getByRole} = render(
+        <Button isPending loadingStyle="terminal" aria-label="Save document">
+          Save
+        </Button>
+      );
+      let button = getByRole('button');
+      
+      // After 1 second delay
+      act(() => {
+        jest.advanceTimersByTime(spinnerVisibilityDelay);
+      });
+      
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('aria-label', 'Save document pending');
+    });
   });
 
   // 'implicit submission' can't be tested https://github.com/testing-library/react-testing-library/issues/487

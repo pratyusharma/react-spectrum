@@ -27,6 +27,7 @@ import {ProgressCircle} from '@react-spectrum/progress';
 import React, {ElementType, ReactElement, useEffect, useState} from 'react';
 import {SpectrumButtonProps} from '@react-types/button';
 import styles from '@adobe/spectrum-css-temp/components/button/vars.css';
+import {TerminalLoader} from './TerminalLoader';
 import {Text} from '@react-spectrum/text';
 import {useButton} from '@react-aria/button';
 import {useFocus, useHover} from '@react-aria/interactions';
@@ -66,6 +67,10 @@ export const Button = React.forwardRef(function Button<T extends ElementType = '
     staticColor,
     isDisabled,
     isPending,
+    loadingStyle = 'spinner',
+    loadingText = 'Loading',
+    loadingSpeed = 500,
+    loadingDots = 4,
     autoFocus,
     ...otherProps
   } = props;
@@ -171,20 +176,31 @@ export const Button = React.forwardRef(function Button<T extends ElementType = '
               UNSAFE_className: classNames(styles, 'spectrum-Button-label')
             }
           }}>
-          {typeof children === 'string'
-            ? <Text>{children}</Text>
-            : children}
-          {isPending && (
-            <div
-              aria-hidden="true"
-              style={{visibility: isProgressVisible ? 'visible' : 'hidden'}}
-              className={classNames(styles, 'spectrum-Button-circleLoader')}>
-              <ProgressCircle
-                aria-label={isPendingAriaLiveLabel}
-                isIndeterminate
-                size="S"
-                staticColor={staticColor} />
-            </div>
+          {isPending && loadingStyle === 'terminal' && isProgressVisible ? (
+            <TerminalLoader
+              text={loadingText}
+              speed={loadingSpeed}
+              maxDots={loadingDots}
+              aria-label={isPendingAriaLiveLabel}
+            />
+          ) : (
+            <>
+              {typeof children === 'string'
+                ? <Text>{children}</Text>
+                : children}
+              {isPending && loadingStyle === 'spinner' && (
+                <div
+                  aria-hidden="true"
+                  style={{visibility: isProgressVisible ? 'visible' : 'hidden'}}
+                  className={classNames(styles, 'spectrum-Button-circleLoader')}>
+                  <ProgressCircle
+                    aria-label={isPendingAriaLiveLabel}
+                    isIndeterminate
+                    size="S"
+                    staticColor={staticColor} />
+                </div>
+              )}
+            </>
           )}
           {isPending &&
             <>
