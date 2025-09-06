@@ -86,7 +86,11 @@ function Example() {
 
 ## Pending
 
-Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, an indeterminate spinner will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, a loading indicator will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+
+### Spinner Loading (Default)
+
+By default, buttons show an indeterminate spinner during loading states:
 
 ```tsx example
 function Example() {
@@ -107,6 +111,87 @@ function Example() {
   );
 }
 ```
+
+### Terminal Loading
+
+For a nostalgic terminal-style loading animation, use the `loadingStyle="terminal"` prop. This displays cycling dots after the loading text (e.g., 'Loading', 'Loading.', 'Loading..', 'Loading...'):
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 3000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save File
+    </Button>
+  );
+}
+```
+
+### Customizing Terminal Loading
+
+The terminal loading animation can be customized with additional props:
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <Flex direction="column" gap="size-150">
+      <Button 
+        variant="primary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        loadingSpeed={300}
+        loadingDots={3}
+        onPress={handlePress}
+      >
+        Custom Terminal
+      </Button>
+      <Button 
+        variant="accent" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Uploading"
+        loadingSpeed={600}
+        onPress={handlePress}
+      >
+        Slow Animation
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Terminal Loading Props
+
+- **`loadingText`**: Custom text to display (default: 'Loading')
+- **`loadingSpeed`**: Animation speed in milliseconds per frame (default: 500ms)
+- **`loadingDots`**: Maximum number of dots to cycle through (default: 4)
+
+### Accessibility
+
+Terminal loading maintains the same accessibility features as spinner loading:
+- Screen reader announcements when loading state changes
+- Proper ARIA labels and live regions for dynamic text updates
+- Focus management during loading states
+- Button remains focusable but interaction is disabled
 
 ## Props
 
