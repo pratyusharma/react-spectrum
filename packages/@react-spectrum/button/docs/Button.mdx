@@ -86,7 +86,11 @@ function Example() {
 
 ## Pending
 
-Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, an indeterminate spinner will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, a loading indicator will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+
+### Default Spinner Loading
+
+By default, buttons display an indeterminate spinner during the loading state.
 
 ```tsx example
 function Example() {
@@ -107,6 +111,131 @@ function Example() {
   );
 }
 ```
+
+### Terminal Loading Animation
+
+For a nostalgic terminal-style experience, buttons can display a cycling dots animation using the `loadingStyle="terminal"` prop. This replaces the button text entirely with a customizable loading message and animated dots.
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save File
+    </Button>
+  );
+}
+```
+
+### Custom Terminal Loading
+
+The terminal loading animation can be fully customized with different text, animation speed, and dot count.
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <Flex wrap gap="size-200">
+      <Button 
+        variant="accent" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        onPress={handlePress}
+      >
+        Process Data
+      </Button>
+      
+      <Button 
+        variant="secondary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Uploading"
+        loadingSpeed={300}
+        loadingDots={3}
+        onPress={handlePress}
+      >
+        Upload Files
+      </Button>
+    </Flex>
+  );
+}
+```
+
+### Loading Styles Comparison
+
+Compare the different loading styles available:
+
+```tsx example
+function Example() {
+  let [spinnerLoading, setSpinnerLoading] = React.useState(false);
+  let [terminalLoading, setTerminalLoading] = React.useState(false);
+
+  return (
+    <Flex wrap gap="size-200">
+      <Button 
+        variant="primary" 
+        isPending={spinnerLoading} 
+        onPress={() => {
+          setSpinnerLoading(true);
+          setTimeout(() => setSpinnerLoading(false), 3000);
+        }}
+      >
+        Spinner Loading
+      </Button>
+      
+      <Button 
+        variant="primary" 
+        isPending={terminalLoading} 
+        loadingStyle="terminal"
+        loadingText="Loading"
+        onPress={() => {
+          setTerminalLoading(true);
+          setTimeout(() => setTerminalLoading(false), 3000);
+        }}
+      >
+        Terminal Loading
+      </Button>
+    </Flex>
+  );
+}
+```
+
+### Terminal Loading Props
+
+The terminal loading animation supports several customization options:
+
+- **`loadingStyle`**: Set to `"terminal"` to enable the terminal-style animation
+- **`loadingText`**: Custom text to display (default: `"Loading"`)
+- **`loadingSpeed`**: Animation speed in milliseconds per frame (default: `500`)
+- **`loadingDots`**: Maximum number of dots in the cycle (default: `4`)
+
+### Accessibility
+
+The terminal loading animation maintains full accessibility support:
+
+- Screen readers announce loading state changes
+- Uses `aria-live="polite"` for non-disruptive updates
+- Maintains focus management during loading
+- Supports keyboard navigation
+- Compatible with high contrast and reduced motion preferences
 
 ## Props
 
