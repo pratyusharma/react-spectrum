@@ -108,6 +108,91 @@ function Example() {
 }
 ```
 
+### Terminal Loading Animation
+
+Buttons can display a nostalgic terminal-style loading animation with cycling dots instead of the default spinner. This provides a retro, developer-friendly aesthetic for your applications. Use the `loadingStyle="terminal"` prop to enable this animation.
+
+```tsx example
+function TerminalExample() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 4000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save File
+    </Button>
+  );
+}
+```
+
+#### Customizing Terminal Loading
+
+The terminal loading animation can be customized with several props:
+
+- `loadingText` - Custom text to display (default: "Loading")
+- `loadingSpeed` - Animation speed in milliseconds per frame (default: 500ms)
+- `loadingDots` - Maximum number of dots to cycle through (default: 4)
+
+```tsx example
+function CustomTerminalExample() {
+  let [isProcessing, setIsProcessing] = React.useState(false);
+  let [isCompiling, setIsCompiling] = React.useState(false);
+
+  return (
+    <Flex direction="column" gap="size-200">
+      <Button 
+        variant="accent" 
+        isPending={isProcessing} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        loadingSpeed={300}
+        loadingDots={3}
+        onPress={() => {
+          setIsProcessing(true);
+          setTimeout(() => setIsProcessing(false), 3000);
+        }}
+      >
+        Process Data
+      </Button>
+      
+      <Button 
+        variant="secondary" 
+        isPending={isCompiling} 
+        loadingStyle="terminal"
+        loadingText="Compiling"
+        loadingSpeed={600}
+        loadingDots={5}
+        onPress={() => {
+          setIsCompiling(true);
+          setTimeout(() => setIsCompiling(false), 4000);
+        }}
+      >
+        Build Project
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Accessibility
+
+The terminal loading animation maintains the same accessibility features as the default spinner:
+- Screen reader announcements when loading starts and ends
+- Proper ARIA labels and live regions
+- Focus management during loading states
+- Button remains focusable but disabled during loading
+
 ## Props
 
 <PropTable component={docs.exports.Button} links={docs.links} />
