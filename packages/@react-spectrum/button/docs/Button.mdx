@@ -108,6 +108,147 @@ function Example() {
 }
 ```
 
+### Terminal Loading Style
+
+For a more retro, terminal-inspired loading experience, you can use the `loadingStyle="terminal"` prop. This replaces the spinning indicator with an animated text display that cycles through dots (e.g., "Loading", "Loading.", "Loading..", "Loading...", "Loading....").
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 4000);
+  };
+
+  return (
+    <Flex wrap gap="size-250">
+      <Button variant="primary" isPending={isLoading} loadingStyle="terminal" onPress={handlePress}>
+        Save File
+      </Button>
+      <Button variant="secondary" isPending={isLoading} loadingStyle="spinner" onPress={handlePress}>
+        Default Spinner
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Customizing Terminal Loading
+
+The terminal loading animation can be customized with additional props:
+
+- **`loadingText`**: Custom text to display (default: "Loading")
+- **`loadingSpeed`**: Animation speed in milliseconds per frame (default: 500ms)
+- **`loadingDots`**: Maximum number of dots to cycle through (default: 4)
+
+```tsx example
+function Example() {
+  let [isProcessing, setIsProcessing] = React.useState(false);
+  let [isSaving, setIsSaving] = React.useState(false);
+  let [isUploading, setIsUploading] = React.useState(false);
+
+  return (
+    <Flex direction="column" gap="size-250">
+      <Flex wrap gap="size-200">
+        <Button 
+          variant="primary" 
+          isPending={isProcessing} 
+          loadingStyle="terminal"
+          loadingText="Processing"
+          loadingSpeed={300}
+          loadingDots={3}
+          onPress={() => {
+            setIsProcessing(true);
+            setTimeout(() => setIsProcessing(false), 3000);
+          }}
+        >
+          Process Data
+        </Button>
+        <Button 
+          variant="accent" 
+          isPending={isSaving} 
+          loadingStyle="terminal"
+          loadingText="Saving"
+          loadingSpeed={600}
+          onPress={() => {
+            setIsSaving(true);
+            setTimeout(() => setIsSaving(false), 3000);
+          }}
+        >
+          Save Changes
+        </Button>
+        <Button 
+          variant="secondary" 
+          isPending={isUploading} 
+          loadingStyle="terminal"
+          loadingText="Uploading"
+          loadingSpeed={400}
+          loadingDots={5}
+          onPress={() => {
+            setIsUploading(true);
+            setTimeout(() => setIsUploading(false), 3000);
+          }}
+        >
+          Upload File
+        </Button>
+      </Flex>
+    </Flex>
+  );
+}
+```
+
+#### Accessibility
+
+The terminal loading animation maintains full accessibility support:
+
+- Screen readers announce the loading state change
+- The loading text is announced via `aria-live="polite"` 
+- Proper ARIA labels are maintained throughout the animation
+- Focus management remains intact during loading states
+- The button remains focusable but interaction is disabled
+
+#### Internationalization
+
+The terminal loading feature supports internationalization through the `loadingText` prop:
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  return (
+    <Flex wrap gap="size-200">
+      <Button 
+        variant="primary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Cargando" // Spanish
+        onPress={() => {
+          setIsLoading(true);
+          setTimeout(() => setIsLoading(false), 3000);
+        }}
+      >
+        Guardar
+      </Button>
+      <Button 
+        variant="secondary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="読み込み中" // Japanese
+        onPress={() => {
+          setIsLoading(true);
+          setTimeout(() => setIsLoading(false), 3000);
+        }}
+      >
+        保存
+      </Button>
+    </Flex>
+  );
+}
+```
+
 ## Props
 
 <PropTable component={docs.exports.Button} links={docs.links} />
