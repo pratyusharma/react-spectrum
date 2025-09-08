@@ -86,7 +86,11 @@ function Example() {
 
 ## Pending
 
-Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, an indeterminate spinner will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+Buttons can indicate that a quick progress task is taking place (e.g., saving settings on a server). After a 1 second delay, a loading indicator will be displayed in place of the button label and icon. You can trigger this behavior with the `isPending` prop. Button events are disabled while `isPending` is true.
+
+### Default Spinner Loading
+
+By default, buttons use an indeterminate spinner for the loading state.
 
 ```tsx example
 function Example() {
@@ -106,6 +110,101 @@ function Example() {
     <Button variant="primary" isPending={isLoading} onPress={handlePress}>Click me!</Button>
   );
 }
+```
+
+### Terminal Loading Animation
+
+For a nostalgic terminal-style loading experience, you can use the `loadingStyle="terminal"` prop. This replaces the button text with an animated cycling dots pattern (e.g., "Loading", "Loading.", "Loading..", "Loading...", "Loading....").
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save Document
+    </Button>
+  );
+}
+```
+
+### Customizing Terminal Loading
+
+The terminal loading animation can be customized with additional props:
+
+```tsx example
+function Example() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 5000);
+  };
+
+  return (
+    <Flex direction="column" gap="size-200">
+      <Button 
+        variant="accent" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        onPress={handlePress}
+      >
+        Process Data
+      </Button>
+      
+      <Button 
+        variant="secondary" 
+        isPending={isLoading} 
+        loadingStyle="terminal"
+        loadingText="Uploading"
+        loadingSpeed={300}
+        loadingDots={3}
+        onPress={handlePress}
+      >
+        Upload Files
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Terminal Loading Props
+
+- **`loadingStyle`**: Set to `"terminal"` to enable the terminal animation (default: `"spinner"`)
+- **`loadingText`**: Custom text to display during loading (default: `"Loading"`)
+- **`loadingSpeed`**: Animation speed in milliseconds per frame (default: `500`)
+- **`loadingDots`**: Maximum number of dots in the animation cycle (default: `4`)
+
+### Accessibility
+
+The terminal loading animation maintains full accessibility support:
+
+- Screen readers announce the loading state via `aria-live="polite"`
+- The button remains focusable during loading
+- Proper ARIA labels describe the loading state
+- Animation respects user motion preferences
+
+```tsx example
+<Button 
+  variant="primary" 
+  isPending={true} 
+  loadingStyle="terminal"
+  loadingText="Saving changes"
+  aria-label="Save document - currently saving changes"
+>
+  Save
+</Button>
 ```
 
 ## Props
