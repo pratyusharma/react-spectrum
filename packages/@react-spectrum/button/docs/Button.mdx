@@ -108,6 +108,151 @@ function Example() {
 }
 ```
 
+### Terminal Loading Animation
+
+Buttons also support a nostalgic terminal-style loading animation that cycles through dots (e.g., 'Loading', 'Loading.', 'Loading..', 'Loading...'). This animation replaces the button text entirely during the loading state, providing a retro aesthetic reminiscent of command-line interfaces.
+
+You can enable terminal loading by setting the `loadingStyle` prop to `"terminal"`. The animation is fully customizable with options for text, speed, and dot count.
+
+```tsx example
+function TerminalExample() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 4000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save File
+    </Button>
+  );
+}
+```
+
+#### Customizing Terminal Animation
+
+The terminal loading animation can be customized with several props:
+
+- **loadingText**: Custom text to display (default: "Loading")
+- **loadingSpeed**: Animation speed in milliseconds per frame (default: 500ms)
+- **loadingDots**: Maximum number of dots in the cycle (default: 4)
+
+```tsx example
+function CustomTerminalExample() {
+  let [isProcessing, setIsProcessing] = React.useState(false);
+
+  let handlePress = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+    }, 5000);
+  };
+
+  return (
+    <Flex direction="column" gap="size-200">
+      <Button 
+        variant="accent" 
+        isPending={isProcessing} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        loadingSpeed={300}
+        loadingDots={3}
+        onPress={handlePress}
+      >
+        Process Data
+      </Button>
+      
+      <Button 
+        variant="secondary" 
+        isPending={isProcessing} 
+        loadingStyle="terminal"
+        loadingText="Uploading"
+        loadingSpeed={400}
+        loadingDots={5}
+        onPress={handlePress}
+      >
+        Upload Files
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Loading Style Comparison
+
+Compare the default spinner loading with the terminal animation:
+
+```tsx example
+function LoadingComparisonExample() {
+  let [spinnerLoading, setSpinnerLoading] = React.useState(false);
+  let [terminalLoading, setTerminalLoading] = React.useState(false);
+
+  let handleSpinnerPress = () => {
+    setSpinnerLoading(true);
+    setTimeout(() => setSpinnerLoading(false), 3000);
+  };
+
+  let handleTerminalPress = () => {
+    setTerminalLoading(true);
+    setTimeout(() => setTerminalLoading(false), 3000);
+  };
+
+  return (
+    <Flex direction="row" gap="size-200">
+      <Button 
+        variant="primary" 
+        isPending={spinnerLoading} 
+        onPress={handleSpinnerPress}
+      >
+        Spinner Loading
+      </Button>
+      
+      <Button 
+        variant="primary" 
+        isPending={terminalLoading} 
+        loadingStyle="terminal"
+        onPress={handleTerminalPress}
+      >
+        Terminal Loading
+      </Button>
+    </Flex>
+  );
+}
+```
+
+### Accessibility
+
+Both loading styles maintain full accessibility support:
+
+- Screen readers announce loading state changes
+- Buttons remain focusable during loading
+- ARIA live regions provide updates for terminal text changes
+- Loading announcements respect the 1-second delay pattern
+
+### Internationalization
+
+The terminal loading animation supports internationalization through the `loadingText` prop:
+
+```tsx example
+// Example with localized loading text
+<Button 
+  isPending={isLoading} 
+  loadingStyle="terminal"
+  loadingText="Cargando" // Spanish for "Loading"
+>
+  Guardar
+</Button>
+```
+
 ## Props
 
 <PropTable component={docs.exports.Button} links={docs.links} />
