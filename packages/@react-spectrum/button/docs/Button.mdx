@@ -108,6 +108,116 @@ function Example() {
 }
 ```
 
+### Terminal Loading Animation
+
+For a nostalgic terminal-style loading experience, buttons can display animated cycling dots instead of the default spinner. Use the `loadingStyle="terminal"` prop to enable this feature. The animation cycles through different numbers of dots (e.g., 'Loading', 'Loading.', 'Loading..', 'Loading...') and completely replaces the button text during loading.
+
+```tsx example
+function TerminalExample() {
+  let [isLoading, setIsLoading] = React.useState(false);
+
+  let handlePress = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 4000);
+  };
+
+  return (
+    <Button 
+      variant="primary" 
+      isPending={isLoading} 
+      loadingStyle="terminal"
+      onPress={handlePress}
+    >
+      Save Document
+    </Button>
+  );
+}
+```
+
+#### Customization Options
+
+The terminal loading animation can be fully customized to match your application's needs:
+
+```tsx example
+function CustomTerminalExample() {
+  let [isProcessing, setIsProcessing] = React.useState(false);
+  let [isUploading, setIsUploading] = React.useState(false);
+  let [isSyncing, setIsSyncing] = React.useState(false);
+
+  return (
+    <Flex direction="column" gap="size-200">
+      {/* Custom loading text */}
+      <Button 
+        variant="accent" 
+        isPending={isProcessing} 
+        loadingStyle="terminal"
+        loadingText="Processing"
+        onPress={() => {
+          setIsProcessing(true);
+          setTimeout(() => setIsProcessing(false), 3000);
+        }}
+      >
+        Process Data
+      </Button>
+
+      {/* Faster animation speed */}
+      <Button 
+        variant="primary" 
+        isPending={isUploading} 
+        loadingStyle="terminal"
+        loadingText="Uploading"
+        loadingSpeed={300}
+        onPress={() => {
+          setIsUploading(true);
+          setTimeout(() => setIsUploading(false), 3000);
+        }}
+      >
+        Upload Files
+      </Button>
+
+      {/* Custom dot count */}
+      <Button 
+        variant="secondary" 
+        isPending={isSyncing} 
+        loadingStyle="terminal"
+        loadingText="Syncing"
+        loadingDots={3}
+        onPress={() => {
+          setIsSyncing(true);
+          setTimeout(() => setIsSyncing(false), 3000);
+        }}
+      >
+        Sync Data
+      </Button>
+    </Flex>
+  );
+}
+```
+
+#### Terminal Loading Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `loadingStyle` | `'spinner' \| 'terminal'` | `'spinner'` | Controls the loading animation style |
+| `loadingText` | `string` | `'Loading'` | Custom text to display during terminal loading |
+| `loadingSpeed` | `number` | `500` | Animation speed in milliseconds per frame |
+| `loadingDots` | `number` | `4` | Maximum number of dots in the animation cycle |
+
+#### Accessibility
+
+The terminal loading animation maintains full accessibility support:
+- Screen readers announce loading state changes
+- Proper ARIA labels and live regions for text updates
+- Focus management is preserved during loading states
+- Supports all internationalization features
+
+#### Best Practices
+
+- Use terminal loading for operations that feel "computational" or "processing-heavy"
+- Keep `loadingText` concise and descriptive of the action
+- Consider your brand voice when choosing between spinner and terminal styles
+- Test with screen readers to ensure the loading text makes sense when announced
+
 ## Props
 
 <PropTable component={docs.exports.Button} links={docs.links} />
