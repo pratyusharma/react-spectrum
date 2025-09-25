@@ -13,9 +13,10 @@
 import {ActionButton} from '@react-spectrum/button';
 import {AriaTagGroupProps, useTagGroup} from '@react-aria/tag';
 import {classNames, useDOMRef} from '@react-spectrum/utils';
-import {Collection, DOMRef, Node, SpectrumLabelableProps, StyleProps, Validation} from '@react-types/shared';
+import {Collection, DOMRef, Node, SpectrumLabelableProps, StyleProps, Validation, Key} from '@react-types/shared';
 import {Field} from '@react-spectrum/label';
 import {FocusRing, FocusScope} from '@react-aria/focus';
+import {ToastQueue} from '@react-spectrum/toast';
 // @ts-ignore
 import intlMessages from '../intl/*.json';
 import {ListCollection, useListState} from '@react-stately/list';
@@ -47,7 +48,15 @@ export interface SpectrumTagGroupProps<T> extends Omit<AriaTagGroupProps<T>, 'se
   /** Sets what the TagGroup should render when there are no tags to display. */
   renderEmptyState?: () => JSX.Element,
   /** Limit the number of rows initially shown. This will render a button that allows the user to expand to show all tags. */
-  maxRows?: number
+  maxRows?: number,
+  /** Whether to allow undo functionality for removed items. */
+  allowsUndo?: boolean,
+  /** The label to display on the undo button. */
+  undoLabel?: string,
+  /** Maximum number of removals that can be undone. */
+  maxUndoCount?: number,
+  /** Handler that is called when an item is restored via undo. */
+  onUndo?: (restoredItem: T) => void
 }
 
 /** Tags allow users to categorize content. They can represent keywords or people, and are grouped to describe an item or a search request. */
@@ -60,7 +69,12 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
     actionLabel,
     onAction,
     labelPosition,
-    renderEmptyState = () => stringFormatter.format('noTags')
+    renderEmptyState = () => stringFormatter.format('noTags'),
+    allowsUndo = false,
+    undoLabel = 'Undo',
+    maxUndoCount = 2,
+    onUndo,
+    onRemove: originalOnRemove
   } = props;
   let domRef = useDOMRef(ref);
   let containerRef = useRef<HTMLDivElement>(null);
@@ -70,21 +84,62 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
   let stringFormatter = useLocalizedStringFormatter(intlMessages, '@react-spectrum/tag');
   let [isCollapsed, setIsCollapsed] = useState(maxRows != null);
   let state = useListState(props);
-  let [tagState, setTagState] = useValueEffect({visibleTagCount: state.collection.size, showCollapseButton: false});
+  
+  // Undo state management
+  let [removedItems, setRemovedItems] = useState<Array<{item: T, originalIndex: number, key: Key}>>([]);
+  let [removedKeys, setRemovedKeys] = useState<Set<Key>>(new Set());
+  
+  // Create filtered collection that excludes removed items
+  let filteredCollection = useMemo(() => {
+    if (!allowsUndo || removedKeys.size === 0) {
+      return state.collection;
+    }
+    return new ListCollection([...state.collection].filter(item => !removedKeys.has(item.key)));
+  }, [state.collection, allowsUndo, removedKeys]);
+  
+  let [tagState, setTagState] = useValueEffect({visibleTagCount: filteredCollection.size, showCollapseButton: false});
   let keyboardDelegate = useMemo(() => {
     let collection = (isCollapsed
-      ? new ListCollection([...state.collection].slice(0, tagState.visibleTagCount))
-      : new ListCollection([...state.collection])) as Collection<Node<T>>;
+      ? new ListCollection([...filteredCollection].slice(0, tagState.visibleTagCount))
+      : new ListCollection([...filteredCollection])) as Collection<Node<T>>;
     return new ListKeyboardDelegate({
       collection,
       ref: tagsRef,
       direction,
       orientation: 'horizontal'
     });
-  }, [direction, isCollapsed, state.collection, tagState.visibleTagCount, tagsRef]) as ListKeyboardDelegate<T>;
+  }, [direction, isCollapsed, filteredCollection, tagState.visibleTagCount, tagsRef]) as ListKeyboardDelegate<T>;
+  
+  // Combined remove handler that integrates undo functionality
+  let handleRemove = useCallback((keys: Set<Key>) => {
+    if (allowsUndo) {
+      // Store removed items for undo functionality
+      keys.forEach(key => {
+        const item = state.collection.getItem(key);
+        if (item && item.value != null) {
+          const originalIndex = [...state.collection].findIndex(i => i.key === key);
+          
+          setRemovedItems(prev => {
+            const newRemovedItems = [...prev, {item: item.value as T, originalIndex, key}];
+            // Respect maxUndoCount limit
+            if (newRemovedItems.length > maxUndoCount) {
+              return newRemovedItems.slice(-maxUndoCount);
+            }
+            return newRemovedItems;
+          });
+          
+          setRemovedKeys(prev => new Set([...prev, key]));
+        }
+      });
+    }
+    
+    // Call the original onRemove handler if provided
+    originalOnRemove?.(keys);
+  }, [allowsUndo, state.collection, maxUndoCount, originalOnRemove]);
+
   // Remove onAction from props so it doesn't make it into useGridList.
   delete props.onAction;
-  let {gridProps, labelProps, descriptionProps, errorMessageProps} = useTagGroup({...props, keyboardDelegate}, state, tagsRef);
+  let {gridProps, labelProps, descriptionProps, errorMessageProps} = useTagGroup({...props, keyboardDelegate, onRemove: handleRemove}, state, tagsRef);
   let actionsId = useId();
   let actionsRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +150,7 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
         let currContainerRef: HTMLDivElement | null = containerRef.current;
         let currTagsRef: HTMLDivElement | null = tagsRef.current;
         let currActionsRef: HTMLDivElement | null = actionsRef.current;
-        if (!currContainerRef || !currTagsRef || !currActionsRef || state.collection.size === 0) {
+        if (!currContainerRef || !currTagsRef || !currActionsRef || filteredCollection.size === 0) {
           return {
             visibleTagCount: 0,
             showCollapseButton: false
@@ -142,19 +197,19 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
 
         return {
           visibleTagCount: Math.max(index, 1),
-          showCollapseButton: index < state.collection.size
+          showCollapseButton: index < filteredCollection.size
         };
       };
 
       setTagState(function *() {
         // Update to show all items.
-        yield {visibleTagCount: state.collection.size, showCollapseButton: true};
+        yield {visibleTagCount: filteredCollection.size, showCollapseButton: true};
 
         // Measure, and update to show the items until maxRows is reached.
         yield computeVisibleTagCount();
       });
     }
-  }, [maxRows, setTagState, direction, scale, state.collection.size]);
+  }, [maxRows, setTagState, direction, scale, filteredCollection.size]);
 
   useResizeObserver({ref: containerRef, onResize: updateVisibleTagCount});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,8 +222,8 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
   }, []);
 
   let visibleTags = useMemo(() =>
-    [...state.collection].slice(0, isCollapsed ? tagState.visibleTagCount : state.collection.size),
-    [isCollapsed, state.collection, tagState.visibleTagCount]
+    [...filteredCollection].slice(0, isCollapsed ? tagState.visibleTagCount : filteredCollection.size),
+    [isCollapsed, filteredCollection, tagState.visibleTagCount]
   );
 
   let handlePressCollapse = () => {
@@ -177,8 +232,27 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
     setIsCollapsed(prevCollapsed => !prevCollapsed);
   };
 
-  let showActions = tagState.showCollapseButton || (actionLabel && onAction);
-  let isEmpty = state.collection.size === 0;
+  let handleUndo = useCallback(() => {
+    if (removedItems.length === 0) return;
+    
+    const lastRemoved = removedItems[removedItems.length - 1];
+    
+    setRemovedItems(prev => prev.slice(0, -1));
+    setRemovedKeys(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(lastRemoved.key);
+      return newSet;
+    });
+    
+    // Show success toast with 😮‍💨 emoji
+    ToastQueue.positive('😮‍💨');
+    
+    // Call the onUndo callback
+    onUndo?.(lastRemoved.item);
+  }, [removedItems, onUndo]);
+
+  let showActions = tagState.showCollapseButton || (actionLabel && onAction) || (allowsUndo && removedItems.length > 0);
+  let isEmpty = filteredCollection.size === 0;
 
   let containerStyle = useMemo(() => {
     if (maxRows == null || !isCollapsed || isEmpty) {
@@ -266,6 +340,14 @@ export const TagGroup = React.forwardRef(function TagGroup<T extends object>(pro
                     onPress={() => onAction?.()}
                     UNSAFE_className={classNames(styles, 'spectrum-Tags-actionButton')}>
                     {actionLabel}
+                  </ActionButton>
+                }
+                {allowsUndo && removedItems.length > 0 &&
+                  <ActionButton
+                    isQuiet
+                    onPress={handleUndo}
+                    UNSAFE_className={classNames(styles, 'spectrum-Tags-actionButton')}>
+                    {undoLabel}
                   </ActionButton>
                 }
               </div>
