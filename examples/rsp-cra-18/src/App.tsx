@@ -1,30 +1,44 @@
 import './App.css';
-import {Provider, defaultTheme} from '@adobe/react-spectrum';
+import {
+  Provider, 
+  defaultTheme,
+  View,
+  Flex,
+  Heading,
+  ActionButton
+} from '@adobe/react-spectrum';
 import {useState} from 'react';
 import {TagGroupUndoDemo} from './TagGroupUndoDemo';
+
+// Use default theme with dark color scheme
+const cursorTheme = defaultTheme;
 
 function App() {
   let [selected, setSelection] = useState(false);
 
   return (
-    <Provider theme={defaultTheme}
-              colorScheme={selected ? "light" : "dark"}>
-      <div className="content-padding">
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-          <h1>React Spectrum TagGroup Undo Feature Demo</h1>
+    <Provider theme={cursorTheme} colorScheme="dark">
+      <div 
+        className="content-padding"
+        style={{
+          background: 'linear-gradient(135deg, #0a0a0a 0%, #171717 50%, #262626 100%)',
+          minHeight: '100vh',
+          color: '#fafafa'
+        }}>
+        <Flex 
+          justifyContent="space-between" 
+          alignItems="center" 
+          marginBottom="size-500"
+          gap="size-200">
+          <h1 className="gradient-heading">
+            React Spectrum TagGroup Undo Feature Demo
+          </h1>
           <button 
-            onClick={() => setSelection(!selected)}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: selected ? '#333' : '#fff',
-              color: selected ? '#fff' : '#333',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            {selected ? 'Dark' : 'Light'} Theme
+            className="theme-toggle"
+            onClick={() => setSelection(!selected)}>
+            {selected ? '🌙 Dark' : '☀️ Light'} Theme
           </button>
-        </div>
+        </Flex>
         <TagGroupUndoDemo />
       </div>
     </Provider>

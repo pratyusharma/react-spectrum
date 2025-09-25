@@ -1,5 +1,17 @@
 import React, {useState, useCallback} from 'react';
-import {Item, TagGroup, ToastContainer, ToastQueue, ActionButton} from '@adobe/react-spectrum';
+import {
+  Item, 
+  TagGroup, 
+  ToastContainer, 
+  ToastQueue, 
+  ActionButton,
+  View,
+  Heading,
+  Text,
+  Content,
+  Flex,
+  Well
+} from '@adobe/react-spectrum';
 import {useListData} from '@react-stately/data';
 import {Key} from '@react-types/shared';
 
@@ -67,7 +79,7 @@ function UndoableTagGroup({ maxUndoCount = 3, undoLabel = 'Undo' }: { maxUndoCou
   }, [removedItems, list]);
 
   return (
-    <div>
+    <View>
       <TagGroup
         aria-label="Categories with undo functionality"
         items={list.items}
@@ -76,39 +88,54 @@ function UndoableTagGroup({ maxUndoCount = 3, undoLabel = 'Undo' }: { maxUndoCou
       </TagGroup>
       
       {removedItems.length > 0 && (
-        <div style={{marginTop: '10px'}}>
-          <ActionButton onPress={handleUndo}>
+        <View marginTop="size-300">
+          <button 
+            className="undo-button"
+            onClick={handleUndo}>
             {undoLabel}
-          </ActionButton>
-        </div>
+          </button>
+        </View>
       )}
-    </div>
+    </View>
   );
 }
 
 export function TagGroupUndoDemo() {
   return (
-    <div style={{padding: '20px'}}>
+    <View padding="size-400">
       <ToastContainer />
-      <h2>TagGroup Undo Demo</h2>
-      <p>Remove tags by clicking the X button or pressing Delete/Backspace. Use the Undo button to restore the most recently removed tag.</p>
       
-      <UndoableTagGroup
-        maxUndoCount={3}
-        undoLabel="Undo"
-      />
-      
-      <div style={{marginTop: '20px', fontSize: '14px', color: '#666'}}>
-        <p>Features demonstrated:</p>
-        <ul>
-          <li>✅ Remove tags by clicking X or pressing Delete/Backspace</li>
-          <li>✅ Undo button appears when tags are removed</li>
-          <li>✅ Toast notification with 😮‍💨 emoji on undo</li>
-          <li>✅ Maximum of 3 removals can be undone</li>
-          <li>✅ Original tag ordering is preserved</li>
-          <li>✅ Console logging of restored items</li>
-        </ul>
-      </div>
-    </div>
+      <Content>
+        <h2 className="section-heading">
+          TagGroup Undo Demo
+        </h2>
+        
+        <p className="section-description">
+          Remove tags by clicking the X button or pressing Delete/Backspace. 
+          Use the Undo button to restore the most recently removed tag.
+        </p>
+        
+        <div className="glass-card">
+          <UndoableTagGroup
+            maxUndoCount={3}
+            undoLabel="Undo"
+          />
+        </div>
+        
+        <div className="glass-card">
+          <h3 className="features-heading">
+            Features demonstrated:
+          </h3>
+          <div className="features-list">
+            <p className="feature-item">✅ Remove tags by clicking X or pressing Delete/Backspace</p>
+            <p className="feature-item">✅ Undo button appears when tags are removed</p>
+            <p className="feature-item">✅ Toast notification with 😮‍💨 emoji on undo</p>
+            <p className="feature-item">✅ Maximum of 3 removals can be undone</p>
+            <p className="feature-item">✅ Original tag ordering is preserved</p>
+            <p className="feature-item">✅ Console logging of restored items</p>
+          </div>
+        </div>
+      </Content>
+    </View>
   );
 }
