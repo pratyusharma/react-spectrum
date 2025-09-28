@@ -1,12 +1,20 @@
-Review the changes on @branch:
 
-- Think through how data flows in the app. Explain new patterns if they exist and why.
-- Were there any changes that could affect infrastructure?
-- Consider empty, loading, error, and offline states.
-- If public APIs have changed, ensure backwards compat (or increment API version).
-- Did we add any unnecessary dependencies? If there's a heavy dependency, could we inline a more minimal version?
-- Did we add quality tests? Prefer fewer, high quality tests. Prefer integration tests for user flows.
-- Were there schema changes which could require a database migration?
-- If feature flags are set up, does this change require adding a new one?
-- Are there places we should use caching?
-- Are we missing critical logging on backend changes?
+Review uncommitted changes on @branch for code quality before committing. Run git diff and check:
+
+CONSISTENCY & REUSE:
+- Follow existing patterns and conventions in the codebase
+- Reuse existing utilities/components instead of creating redundant code
+- Use the same libraries and error handling patterns as similar files
+
+CODE QUALITY:
+- Look for obvious bugs, logic errors, or overengineering
+- Flag unnecessary complexity or premature abstractions
+- Suggest simpler solutions where applicable
+
+TEST INTEGRITY:
+- Tests must verify actual functionality, not implementation details
+- Test fixes must preserve behavior validation, not just make tests pass
+- Avoid brittle tests that break with refactoring
+- Flag tests that mirror implementation or test mocks instead of code
+
+Output: List any issues found by category with specific locations. If all good, confirm ready to commit.
