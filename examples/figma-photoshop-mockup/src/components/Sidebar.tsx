@@ -1,3 +1,4 @@
+import React from 'react';
 import { RotateCcw, Sun, Contrast, Palette, Crop, Zap, Aperture, Focus, Thermometer, Eye, Scissors, RotateCw, FlipHorizontal, FlipVertical } from 'lucide-react';
 import { TagChip } from './TagChip';
 

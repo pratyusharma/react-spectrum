@@ -68,7 +68,8 @@
     "packages/react-aria-components",
     "packages/tailwindcss-react-aria-components",
     "packages/*/*",
-    "packages/dev/mcp"
+    "packages/dev/mcp",
+    "examples/figma-photoshop-mockup"
   ],
   "devDependencies": {
     "@actions/core": "^1.1.0",
