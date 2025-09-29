@@ -1,4 +1,4 @@
-Create a concise commit message for all uncommitted changes on @branch
+Create a concise commit message for all the changes on @branch
 
 Instructions:
 - Run git diff to analyze the actual changes
