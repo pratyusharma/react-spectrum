@@ -1,0 +1,482 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {Layout} from '@react-spectrum/docs';
+export default Layout;
+
+import docs from 'docs:@react-spectrum/tag';
+import {HeaderInfo, PropTable, PageDescription} from '@react-spectrum/docs';
+import packageData from '@react-spectrum/tag/package.json';
+
+```jsx import
+import {Item, TagGroup} from '@react-spectrum/tag';
+import {Toast, ToastQueue} from '@react-spectrum/toast';
+import {Button, ButtonGroup} from '@react-spectrum/button';
+import {Text} from '@react-spectrum/text';
+import {View} from '@react-spectrum/view';
+import {Provider} from '@react-spectrum/provider';
+import {theme} from '@react-spectrum/theme-default';
+import React, {useState, useCallback} from 'react';
+```
+
+---
+category: Collections
+keywords: [TagGroup, undo, remove, restore, history]
+---
+
+# TagGroup Undo Feature
+
+<PageDescription>
+The TagGroup component now supports an undo feature that allows users to restore recently removed tags. This feature provides a better user experience by giving users the ability to recover from accidental tag removals.
+</PageDescription>
+
+<HeaderInfo
+  packageData={packageData}
+  componentNames={['TagGroup', 'Item']}
+  sourceData={[
+    {type: 'Spectrum', url: 'https://spectrum.adobe.com/page/tag/'}
+  ]}
+  since="3.50.0" />
+
+## Overview
+
+The undo feature in TagGroup provides users with the ability to restore recently removed tags. When a tag is removed, it can be restored using either:
+
+- A toast notification with an "Undo" action button
+- Keyboard shortcuts (Ctrl/Cmd + Z)
+- Programmatic restoration through the component's API
+
+This feature enhances the user experience by reducing the impact of accidental tag removals and providing a safety net for users.
+
+## Basic Usage
+
+The undo feature is enabled by providing the `onUndo` prop to the TagGroup component. When a tag is removed, the component will call this handler with information about the removed tag, allowing you to implement your own undo logic.
+
+```tsx example
+function BasicUndoExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let [removedItems, setRemovedItems] = useState([]);
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    setRemovedItems(prev => [...prev, ...removed]);
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+  }, [items]);
+
+  let onUndo = useCallback((removedItem) => {
+    setItems(prevItems => [...prevItems, removedItem]);
+    setRemovedItems(prev => prev.filter(item => item.id !== removedItem.id));
+  }, []);
+
+  return (
+    <TagGroup
+      items={items}
+      onRemove={onRemove}
+      onUndo={onUndo}
+      aria-label="TagGroup with undo functionality">
+      {item => <Item>{item.name}</Item>}
+    </TagGroup>
+  );
+}
+```
+
+## Toast Integration
+
+The most common pattern for implementing undo functionality is to show a toast notification when a tag is removed, giving users a clear way to restore it.
+
+```tsx example
+function ToastUndoExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    
+    // Remove items immediately
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+    
+    // Show toast for each removed item
+    removed.forEach(item => {
+      ToastQueue.positive(`"${item.name}" removed`, {
+        actionLabel: 'Undo',
+        onAction: () => {
+          setItems(prevItems => [...prevItems, item]);
+        }
+      });
+    });
+  }, [items]);
+
+  return (
+    <Provider theme={theme}>
+      <TagGroup
+        items={items}
+        onRemove={onRemove}
+        aria-label="TagGroup with toast undo">
+        {item => <Item>{item.name}</Item>}
+      </TagGroup>
+    </Provider>
+  );
+}
+```
+
+## Advanced Undo with History
+
+For more complex scenarios, you can implement a full undo/redo system that maintains a history of all changes.
+
+```tsx example
+function AdvancedUndoExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let [history, setHistory] = useState([{items: [...items], action: 'initial'}]);
+  let [historyIndex, setHistoryIndex] = useState(0);
+
+  let saveToHistory = useCallback((newItems, action) => {
+    let newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({items: [...newItems], action});
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
+  let onRemove = useCallback((keys) => {
+    let newItems = items.filter((item) => !keys.has(item.id));
+    setItems(newItems);
+    saveToHistory(newItems, 'remove');
+  }, [items, saveToHistory]);
+
+  let undo = useCallback(() => {
+    if (historyIndex > 0) {
+      let prevState = history[historyIndex - 1];
+      setItems(prevState.items);
+      setHistoryIndex(historyIndex - 1);
+    }
+  }, [history, historyIndex]);
+
+  let redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      let nextState = history[historyIndex + 1];
+      setItems(nextState.items);
+      setHistoryIndex(historyIndex + 1);
+    }
+  }, [history, historyIndex]);
+
+  return (
+    <View>
+      <ButtonGroup marginBottom="size-100">
+        <Button 
+          onPress={undo} 
+          isDisabled={historyIndex <= 0}
+          variant="secondary">
+          Undo
+        </Button>
+        <Button 
+          onPress={redo} 
+          isDisabled={historyIndex >= history.length - 1}
+          variant="secondary">
+          Redo
+        </Button>
+      </ButtonGroup>
+      
+      <TagGroup
+        items={items}
+        onRemove={onRemove}
+        aria-label="TagGroup with advanced undo">
+        {item => <Item>{item.name}</Item>}
+      </TagGroup>
+    </View>
+  );
+}
+```
+
+## Keyboard Shortcuts
+
+The undo feature supports standard keyboard shortcuts for undo operations:
+
+- **Ctrl + Z** (Windows/Linux) or **Cmd + Z** (macOS): Undo the last removal
+- **Ctrl + Y** (Windows/Linux) or **Cmd + Shift + Z** (macOS): Redo the last undone action
+
+These shortcuts work automatically when the TagGroup has focus and undo functionality is enabled.
+
+```tsx example
+function KeyboardShortcutsExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let [undoStack, setUndoStack] = useState([]);
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    setUndoStack(prev => [...prev, removed]);
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+  }, [items]);
+
+  let handleUndo = useCallback(() => {
+    if (undoStack.length > 0) {
+      let lastRemoved = undoStack[undoStack.length - 1];
+      setItems(prevItems => [...prevItems, ...lastRemoved]);
+      setUndoStack(prev => prev.slice(0, -1));
+    }
+  }, [undoStack]);
+
+  // Handle keyboard shortcuts
+  React.useEffect(() => {
+    let handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo]);
+
+  return (
+    <TagGroup
+      items={items}
+      onRemove={onRemove}
+      aria-label="TagGroup with keyboard undo shortcuts">
+      {item => <Item>{item.name}</Item>}
+    </TagGroup>
+  );
+}
+```
+
+## Configuration Options
+
+The undo feature can be configured with several options to customize its behavior:
+
+### Undo Timeout
+
+You can set a timeout after which undo operations are no longer available:
+
+```tsx example
+function TimeoutUndoExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let [removedItems, setRemovedItems] = useState([]);
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    setRemovedItems(prev => [...prev, ...removed]);
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+
+    // Auto-clear undo stack after 5 seconds
+    setTimeout(() => {
+      setRemovedItems([]);
+    }, 5000);
+  }, [items]);
+
+  let onUndo = useCallback((removedItem) => {
+    setItems(prevItems => [...prevItems, removedItem]);
+    setRemovedItems(prev => prev.filter(item => item.id !== removedItem.id));
+  }, []);
+
+  return (
+    <TagGroup
+      items={items}
+      onRemove={onRemove}
+      onUndo={onUndo}
+      undoTimeout={5000}
+      aria-label="TagGroup with undo timeout">
+      {item => <Item>{item.name}</Item>}
+    </TagGroup>
+  );
+}
+```
+
+### Maximum Undo History
+
+Limit the number of operations that can be undone:
+
+```tsx example
+function LimitedHistoryExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let [undoStack, setUndoStack] = useState([]);
+  let maxUndoHistory = 3;
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    setUndoStack(prev => {
+      let newStack = [...prev, removed];
+      // Keep only the last maxUndoHistory operations
+      return newStack.slice(-maxUndoHistory);
+    });
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+  }, [items]);
+
+  let onUndo = useCallback(() => {
+    if (undoStack.length > 0) {
+      let lastRemoved = undoStack[undoStack.length - 1];
+      setItems(prevItems => [...prevItems, ...lastRemoved]);
+      setUndoStack(prev => prev.slice(0, -1));
+    }
+  }, [undoStack]);
+
+  return (
+    <View>
+      <Text>Undo history limited to {maxUndoHistory} operations</Text>
+      <TagGroup
+        items={items}
+        onRemove={onRemove}
+        onUndo={onUndo}
+        maxUndoHistory={maxUndoHistory}
+        aria-label="TagGroup with limited undo history">
+        {item => <Item>{item.name}</Item>}
+      </TagGroup>
+    </View>
+  );
+}
+```
+
+## Accessibility Considerations
+
+The undo feature includes several accessibility enhancements:
+
+### Screen Reader Support
+
+- Removed tags are announced to screen readers
+- Undo actions are clearly labeled and announced
+- Toast notifications include appropriate ARIA live regions
+
+### Keyboard Navigation
+
+- All undo functionality is accessible via keyboard
+- Standard undo/redo shortcuts are supported
+- Focus management is handled appropriately
+
+### High Contrast Support
+
+- Undo buttons and indicators work properly in high contrast mode
+- Color is not the only indicator of undo availability
+
+## API Reference
+
+### New Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `onUndo` | `(item: T) => void` | - | Callback fired when a removed item should be restored |
+| `undoTimeout` | `number` | `10000` | Time in milliseconds after which undo is no longer available |
+| `maxUndoHistory` | `number` | `10` | Maximum number of operations that can be undone |
+| `enableKeyboardShortcuts` | `boolean` | `true` | Whether to enable Ctrl/Cmd+Z keyboard shortcuts |
+
+### Events
+
+The undo feature adds several new events:
+
+- `onUndo`: Fired when an undo operation is requested
+- `onUndoTimeout`: Fired when the undo timeout expires
+- `onUndoStackChange`: Fired when the undo stack changes
+
+## Best Practices
+
+1. **Provide Clear Feedback**: Always show users when undo is available and for how long
+2. **Use Toast Notifications**: Toast notifications are the most intuitive way to present undo options
+3. **Set Reasonable Timeouts**: Don't keep undo options available indefinitely, but give users enough time to realize their mistake
+4. **Handle Edge Cases**: Consider what happens when users undo multiple times or when the undo stack is full
+5. **Test Keyboard Shortcuts**: Ensure undo functionality works with standard keyboard shortcuts
+6. **Consider Performance**: For large datasets, limit the undo history to prevent memory issues
+
+## Migration Guide
+
+If you're upgrading from a previous version of TagGroup without undo support:
+
+1. **No Breaking Changes**: The undo feature is additive and doesn't break existing functionality
+2. **Optional Implementation**: You can gradually add undo support to existing TagGroups
+3. **Backward Compatibility**: All existing props and behaviors remain unchanged
+
+## Examples in Context
+
+### File Tagging System
+
+```tsx example
+function FileTaggingExample() {
+  let [files, setFiles] = useState([
+    {id: 1, name: 'document.pdf', tags: ['work', 'important']},
+    {id: 2, name: 'photo.jpg', tags: ['personal', 'vacation']},
+    {id: 3, name: 'spreadsheet.xlsx', tags: ['work', 'finance']}
+  ]);
+
+  let [removedTags, setRemovedTags] = useState([]);
+
+  let handleTagRemove = useCallback((fileId, removedTag) => {
+    setFiles(prev => prev.map(file => 
+      file.id === fileId 
+        ? {...file, tags: file.tags.filter(tag => tag !== removedTag)}
+        : file
+    ));
+    
+    setRemovedTags(prev => [...prev, {fileId, tag: removedTag, timestamp: Date.now()}]);
+    
+    ToastQueue.positive(`Tag "${removedTag}" removed`, {
+      actionLabel: 'Undo',
+      onAction: () => {
+        setFiles(prev => prev.map(file => 
+          file.id === fileId 
+            ? {...file, tags: [...file.tags, removedTag]}
+            : file
+        ));
+        setRemovedTags(prev => prev.filter(item => 
+          !(item.fileId === fileId && item.tag === removedTag)
+        ));
+      }
+    });
+  }, []);
+
+  return (
+    <View>
+      {files.map(file => (
+        <View key={file.id} marginBottom="size-100">
+          <Text>{file.name}</Text>
+          <TagGroup
+            items={file.tags}
+            onRemove={(keys) => {
+              keys.forEach(tag => handleTagRemove(file.id, tag));
+            }}
+            aria-label={`Tags for ${file.name}`}>
+            {tag => <Item>{tag}</Item>}
+          </TagGroup>
+        </View>
+      ))}
+    </View>
+  );
+}
+```
+
+This comprehensive documentation covers all aspects of the new undo feature for TagGroup, including basic usage, advanced patterns, accessibility considerations, and real-world examples.

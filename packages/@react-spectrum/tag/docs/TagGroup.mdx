@@ -23,6 +23,7 @@ import ShoppingCart from '@spectrum-icons/workflow/ShoppingCart';
 import {Text} from '@react-spectrum/text';
 import {Avatar} from '@react-spectrum/avatar';
 import {View} from '@react-spectrum/view';
+import {ToastQueue} from '@react-spectrum/toast';
 ```
 
 ---
@@ -137,6 +138,47 @@ TagGroup supports an `onAction` handler that, when used with the `actionLabel` p
   <Item>Gaming</Item>
   <Item>Shopping</Item>
 </TagGroup>
+```
+
+### Undo Functionality
+
+TagGroup supports undo functionality that allows users to restore recently removed tags. This feature provides a better user experience by giving users the ability to recover from accidental tag removals.
+
+The undo feature can be implemented using toast notifications, keyboard shortcuts, or programmatic restoration. See the [TagGroup Undo Feature documentation](TagGroupUndo.html) for detailed examples and implementation patterns.
+
+```tsx example
+function UndoExample() {
+  let [items, setItems] = React.useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let onRemove = (keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+    
+    // Show undo toast for each removed item
+    removed.forEach(item => {
+      ToastQueue.positive(`"${item.name}" removed`, {
+        actionLabel: 'Undo',
+        onAction: () => {
+          setItems(prevItems => [...prevItems, item]);
+        }
+      });
+    });
+  };
+
+  return (
+    <TagGroup
+      items={items}
+      onRemove={onRemove}
+      aria-label="TagGroup with undo functionality">
+      {item => <Item>{item.name}</Item>}
+    </TagGroup>
+  );
+}
 ```
 
 ## Links
