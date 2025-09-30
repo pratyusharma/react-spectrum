@@ -1,0 +1,189 @@
+{/* Copyright 2024 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License. */}
+
+import {BlogPostLayout, Hero} from '@react-spectrum/docs';
+export default BlogPostLayout;
+
+---
+description: We're excited to announce the new undo feature for TagGroup! This feature allows users to restore recently removed tags, providing a better user experience and reducing the impact of accidental tag removals. The undo functionality supports toast notifications, keyboard shortcuts, and programmatic restoration.
+date: 2024-12-20
+---
+
+# TagGroup Undo Feature Release
+
+We're excited to announce the new undo feature for TagGroup! This feature allows users to restore recently removed tags, providing a better user experience and reducing the impact of accidental tag removals.
+
+## What's New
+
+### Undo Functionality for TagGroup
+
+The TagGroup component now supports undo functionality that allows users to restore recently removed tags. This feature provides several benefits:
+
+- **Better User Experience**: Users can recover from accidental tag removals
+- **Reduced Anxiety**: Users feel more confident when removing tags knowing they can undo
+- **Multiple Implementation Options**: Support for toast notifications, keyboard shortcuts, and programmatic restoration
+
+### Key Features
+
+- **Toast Integration**: Show undo options in toast notifications when tags are removed
+- **Keyboard Shortcuts**: Support for Ctrl/Cmd+Z undo shortcuts
+- **Configurable Timeouts**: Set custom timeouts for undo availability
+- **History Management**: Control the maximum number of operations that can be undone
+- **Accessibility**: Full screen reader support and keyboard navigation
+
+## Implementation Examples
+
+### Basic Toast Integration
+
+```tsx
+function BasicUndoExample() {
+  let [items, setItems] = useState([
+    {id: 1, name: 'News'},
+    {id: 2, name: 'Travel'},
+    {id: 3, name: 'Gaming'},
+    {id: 4, name: 'Shopping'}
+  ]);
+
+  let onRemove = useCallback((keys) => {
+    let removed = items.filter(item => keys.has(item.id));
+    
+    // Remove items immediately
+    setItems(prevItems => prevItems.filter((item) => !keys.has(item.id)));
+    
+    // Show toast for each removed item
+    removed.forEach(item => {
+      ToastQueue.positive(`"${item.name}" removed`, {
+        actionLabel: 'Undo',
+        onAction: () => {
+          setItems(prevItems => [...prevItems, item]);
+        }
+      });
+    });
+  }, [items]);
+
+  return (
+    <TagGroup
+      items={items}
+      onRemove={onRemove}
+      aria-label="TagGroup with undo functionality">
+      {item => <Item>{item.name}</Item>}
+    </TagGroup>
+  );
+}
+```
+
+### Advanced History Management
+
+```tsx
+function AdvancedUndoExample() {
+  let [items, setItems] = useState([...]);
+  let [history, setHistory] = useState([{items: [...items], action: 'initial'}]);
+  let [historyIndex, setHistoryIndex] = useState(0);
+
+  let saveToHistory = useCallback((newItems, action) => {
+    let newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({items: [...newItems], action});
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
+  let undo = useCallback(() => {
+    if (historyIndex > 0) {
+      let prevState = history[historyIndex - 1];
+      setItems(prevState.items);
+      setHistoryIndex(historyIndex - 1);
+    }
+  }, [history, historyIndex]);
+
+  return (
+    <View>
+      <ButtonGroup>
+        <Button onPress={undo} isDisabled={historyIndex <= 0}>
+          Undo
+        </Button>
+      </ButtonGroup>
+      
+      <TagGroup items={items} onRemove={onRemove}>
+        {item => <Item>{item.name}</Item>}
+      </TagGroup>
+    </View>
+  );
+}
+```
+
+## Configuration Options
+
+The undo feature includes several configuration options:
+
+- **`undoTimeout`**: Time in milliseconds after which undo is no longer available (default: 10 seconds)
+- **`maxUndoHistory`**: Maximum number of operations that can be undone (default: 10)
+- **`enableKeyboardShortcuts`**: Whether to enable Ctrl/Cmd+Z keyboard shortcuts (default: true)
+
+## Accessibility Features
+
+The undo feature includes comprehensive accessibility support:
+
+- **Screen Reader Support**: Removed tags are announced to screen readers
+- **Keyboard Navigation**: All undo functionality is accessible via keyboard
+- **ARIA Live Regions**: Toast notifications include appropriate ARIA live regions
+- **High Contrast Support**: Works properly in high contrast mode
+
+## Migration Guide
+
+The undo feature is fully backward compatible:
+
+- **No Breaking Changes**: Existing TagGroup implementations continue to work unchanged
+- **Optional Feature**: Undo functionality is opt-in and doesn't affect existing behavior
+- **Gradual Adoption**: You can add undo support to existing TagGroups incrementally
+
+## Documentation
+
+For detailed documentation and more examples, see:
+
+- [TagGroup Undo Feature Documentation](https://react-spectrum.adobe.com/react-spectrum/TagGroupUndo.html)
+- [Updated TagGroup Documentation](https://react-spectrum.adobe.com/react-spectrum/TagGroup.html)
+
+## Getting Started
+
+To start using the undo feature in your TagGroup:
+
+1. Import the necessary components:
+   ```tsx
+   import {TagGroup, Item} from '@react-spectrum/tag';
+   import {ToastQueue} from '@react-spectrum/toast';
+   ```
+
+2. Implement the undo logic in your `onRemove` handler
+3. Show toast notifications with undo actions
+4. Optionally implement keyboard shortcuts for undo/redo
+
+## Feedback
+
+We'd love to hear your feedback on this new feature! Please let us know:
+
+- How you're using the undo functionality
+- Any issues or suggestions for improvement
+- Additional features you'd like to see
+
+You can share your feedback on [GitHub Discussions](https://github.com/adobe/react-spectrum/discussions) or by opening an issue.
+
+## What's Next
+
+This is just the beginning of our undo functionality improvements. We're planning to:
+
+- Add undo support to other collection components
+- Implement more sophisticated history management
+- Add visual indicators for undo availability
+- Improve keyboard shortcut customization
+
+Stay tuned for more updates!
+
+---
+
+Thank you to all our contributors and the community for your feedback and support. We're excited to see how you use this new feature in your applications!
